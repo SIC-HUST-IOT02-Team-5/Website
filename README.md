@@ -32,11 +32,21 @@ your-project/
 
 ## Hướng dẫn cài đặt & chạy
 
+
 ### 1. Chuẩn bị môi trường
+
+#### Yêu cầu phiên bản Python
+
+- Dự án sử dụng Python 3.11.2. Bạn cần cài đúng bản này để đảm bảo môi trường giống hệt nhau.
+- Kiểm tra phiên bản bằng lệnh:
+  ```bash
+  python --version
+  ```
+- Nếu chưa đúng, tải Python 3.11.2 tại https://www.python.org/downloads/release/python-3112/
 
 #### Linux/MacOS
 
-- Đảm bảo đã cài Python >= 3.8 và pip.
+- Đảm bảo đã cài Python 3.11.2 và pip.
 - Cài đặt gói tạo môi trường ảo:
   ```bash
   sudo apt install python3-venv
@@ -44,7 +54,7 @@ your-project/
 
 #### Windows
 
-- Cài Python từ https://python.org (chọn Add to PATH khi cài đặt).
+- Cài Python 3.11.2 từ https://www.python.org/downloads/release/python-3112/ (chọn Add to PATH khi cài đặt).
 - Mở Command Prompt hoặc PowerShell.
 
 
@@ -86,11 +96,14 @@ python -m venv venv
   venv\Scripts\activate
   ```
 
+
 ### 4. Cài đặt các package cần thiết
 
 ```bash
 pip install --upgrade pip
 pip install -r backend/requirements.txt
+# Hoặc để đảm bảo giống hệt môi trường, dùng file lock:
+pip install -r backend/requirements.lock
 ```
 
 ### 5. Thiết lập file cấu hình `.env`

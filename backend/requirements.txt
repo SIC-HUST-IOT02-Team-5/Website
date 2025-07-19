@@ -1,4 +1,20 @@
-flask
-flask_sqlalchemy
-psycopg2-binary
-python-dotenv
+############################################################
+# Dự án này yêu cầu Python 3.11.2
+# Nếu bạn dùng pyenv hoặc asdf, hãy tạo file .python-version với nội dung:
+# 3.11.2
+#
+# Các package bên dưới là toàn bộ môi trường đã lock, đảm bảo giống hệt nhau
+############################################################
+blinker==1.9.0
+click==8.2.1
+Flask==3.1.1
+Flask-SQLAlchemy==3.1.1
+greenlet==3.2.3
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+psycopg2-binary==2.9.10
+python-dotenv==1.1.1
+SQLAlchemy==2.0.41
+typing_extensions==4.14.1
+Werkzeug==3.1.3
