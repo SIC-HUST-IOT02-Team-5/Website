@@ -102,8 +102,6 @@ python -m venv venv
 ```bash
 pip install --upgrade pip
 pip install -r backend/requirements.txt
-# Hoặc để đảm bảo giống hệt môi trường, dùng file lock:
-pip install -r backend/requirements.lock
 ```
 
 ### 5. Thiết lập file cấu hình `.env`
