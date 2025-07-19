@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: iot_postgres
+    restart: always
+    ports:
+      - "5433:5432"  # Cổng bên ngoài: 5433
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  adminer:
+    image: adminer
+    container_name: iot_adminer
+    restart: always
+    ports:
+      - "8081:8080"  # Truy cập GUI tại http://localhost:8081
+    depends_on:
+      - db
+
+  backend:
+    build: ./backend
+    container_name: iot_backend
+    restart: always
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    env_file:
+      - .env
