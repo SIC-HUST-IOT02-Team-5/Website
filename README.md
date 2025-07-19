@@ -1,16 +1,63 @@
+
 # Backend-DB
 
-## Hướng dẫn cài đặt môi trường phát triển
+## Mô tả dự án
 
-### 1. Tạo môi trường ảo Python
+Dự án này là backend cho hệ thống IoT, sử dụng Python, Flask, SQLAlchemy, PostgreSQL. Hỗ trợ chạy bằng Docker hoặc môi trường ảo Python.
 
-Chạy lệnh sau trong thư mục dự án:
+## Cấu trúc thư mục
+
+```
+your-project/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── db.py
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── user.py
+│   │   │   ├── locker.py
+│   │   │   ├── device.py
+│   │   │   └── history.py
+│   │   └── schemas/      # nếu dùng Pydantic (optional)
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── run.py
+├── db-data/              # Docker volume
+├── docker-compose.yml
+├── .env                  # cấu hình DB
+├── README.md
+└── setup_env.sh
+```
+
+## Hướng dẫn cài đặt & chạy
+
+### 1. Chuẩn bị môi trường
+
+#### Linux/MacOS
+
+- Đảm bảo đã cài Python >= 3.8 và pip.
+- Cài đặt gói tạo môi trường ảo:
+  ```bash
+  sudo apt install python3-venv
+  ```
+
+#### Windows
+
+- Cài Python từ https://python.org (chọn Add to PATH khi cài đặt).
+- Mở Command Prompt hoặc PowerShell.
+
+### 2. Tạo môi trường ảo Python
 
 ```bash
 python3 -m venv venv
 ```
+Hoặc trên Windows:
+```cmd
+python -m venv venv
+```
 
-### 2. Kích hoạt môi trường ảo
+### 3. Kích hoạt môi trường ảo
 
 - **Linux/MacOS:**
   ```bash
@@ -21,22 +68,60 @@ python3 -m venv venv
   venv\Scripts\activate
   ```
 
-### 3. Cài đặt các package cần thiết
-
-Sau khi đã kích hoạt môi trường ảo, chạy:
+### 4. Cài đặt các package cần thiết
 
 ```bash
 pip install --upgrade pip
 pip install -r backend/requirements.txt
 ```
 
-### 4. Chạy ứng dụng
+### 5. Thiết lập file cấu hình `.env`
+
+Sao chép file `.env` mẫu hoặc chỉnh sửa cho phù hợp:
+```
+DB_NAME=iot_db
+DB_USER=root
+DB_PASSWORD=password
+DB_HOST=db
+DB_PORT=5432
+```
+- Nếu chạy bằng Docker, giữ nguyên `DB_HOST=db`.
+- Nếu chạy PostgreSQL local, đổi `DB_HOST=localhost` và `DB_PORT=5433` (theo docker-compose).
+
+### 6. Chạy ứng dụng
 
 ```bash
 python backend/run.py
 ```
+Ứng dụng sẽ tự động tạo các bảng trong database.
 
-## Lưu ý
-- File `.env` chứa thông tin cấu hình database, cần được thiết lập phù hợp.
-- Không commit các file dữ liệu, môi trường ảo, hoặc thông tin nhạy cảm lên git.
-- Đã có file `.gitignore` để hỗ trợ teamwork.
+---
+
+## Chạy bằng Docker (khuyên dùng cho teamwork)
+
+1. Cài Docker Desktop (Windows) hoặc Docker Engine (Linux).
+2. Chạy lệnh sau tại thư mục dự án:
+   ```bash
+   docker-compose up --build
+   ```
+3. Truy cập Adminer tại http://localhost:8081 để kiểm tra database.
+
+---
+
+## Lưu ý khi teamwork
+
+- Không commit thư mục `venv/`, `db-data/`, file dữ liệu cá nhân.
+- File `.env` nên được chia sẻ để các thành viên cấu hình giống nhau.
+- Đã có `.gitignore` để loại trừ các file không cần thiết.
+- Nếu có thay đổi về cấu trúc DB, cập nhật models và chạy lại `run.py` để migrate.
+
+---
+
+## Troubleshooting
+
+- Nếu lỗi khi cài package, kiểm tra đã kích hoạt đúng môi trường ảo.
+- Nếu không kết nối được DB, kiểm tra lại thông tin trong `.env` và trạng thái container Docker.
+
+---
+
+Bạn chỉ cần làm theo các bước trên, mọi thành viên đều có thể cài đặt và chạy dự án trên cả Windows và Linux dễ dàng!
