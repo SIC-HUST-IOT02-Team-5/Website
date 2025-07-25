@@ -13,6 +13,6 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.user)
-    full_name = db.Column(db.String(100))
+    full_name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())

@@ -7,6 +7,6 @@ class UserSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True, load_only=True)  # password only for input, not output
     role = EnumField(UserRole, by_value=True)
-    full_name = fields.Str()
+    full_name = fields.Str(required = True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
