@@ -1,10 +1,8 @@
 from flask import Flask
 from app.extensions import db, migrate
 from app.routes.user_route import user_bp
-import os
+from app.routes.cell_route import cell_bp
 
-# Import các models để SQLAlchemy biết cần tạo bảng nào
-from app.models.user_model import User
 
 def create_app():
     app = Flask(__name__)
@@ -14,6 +12,7 @@ def create_app():
     migrate.init_app(app, db)
 
     app.register_blueprint(user_bp)
+    app.register_blueprint(cell_bp)
 
     return app
 
