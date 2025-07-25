@@ -6,7 +6,7 @@ class UserRole(enum.Enum):
     admin = "admin"
     user = "user"
 
-class User(db.Model):
+class UserModel(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
