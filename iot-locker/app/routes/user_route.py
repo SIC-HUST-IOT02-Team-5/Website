@@ -2,25 +2,27 @@
 from flask import Blueprint, request, jsonify
 from app.schemas.user_schema import UserSchema
 from app.services.user_service import UserService
-
+from app.auth.auth_service import AuthService
+from passlib.hash import pbkdf2_sha256
 
 user_bp = Blueprint('user_bp', __name__)
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
-
+# Admin tạo user mới (role tuỳ chọn, chỉ cho phép nếu đang đăng nhập là admin)
 @user_bp.route('/users', methods=['POST'])
 def create_user_route():
     data = request.get_json()
     errors = user_schema.validate(data)
     if errors:
         return jsonify({"error": errors}), 400
-
-    user = UserService.create_user(data)
+    creator_role = request.args.get('role')
+    if creator_role != 'admin':
+        return jsonify({"error": "Permission denied: Only admin can create users."}), 403
+    user, error = AuthService.create_user_by_admin(data, creator_role)
     if user is None:
-        return jsonify({"error": "user is already existed"}), 400
+        return jsonify({"error": error}), 403 if error and 'Permission denied' in error else 400
     return user_schema.dump(user), 201
-
 
 @user_bp.route('/users', methods=['GET'])
 def get_users():

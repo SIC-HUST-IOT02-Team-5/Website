@@ -5,8 +5,8 @@ from app.models.cell_model import CellStatus, CellisLocked
 class CellSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
-    status = EnumField(CellStatus, by_value=True)
-    is_locked = EnumField(CellisLocked, by_value=True)
+    status = EnumField(CellStatus, by_value=True, default = CellStatus.closed)
+    is_locked = EnumField(CellisLocked, by_value=True, default = CellisLocked.locked)
 
     last_open_at = fields.DateTime(dump_only=True)
     last_close_at = fields.DateTime(dump_only=True)

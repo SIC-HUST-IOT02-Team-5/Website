@@ -2,7 +2,8 @@ from flask import Flask
 from app.extensions import db, migrate
 from app.routes.user_route import user_bp
 from app.routes.cell_route import cell_bp
-
+from app.routes.item_route import item_bp
+from app.auth.auth_route import auth_bp
 
 def create_app():
     app = Flask(__name__)
@@ -13,7 +14,8 @@ def create_app():
 
     app.register_blueprint(user_bp)
     app.register_blueprint(cell_bp)
-
+    app.register_blueprint(item_bp)
+    app.register_blueprint(auth_bp)
     return app
 
 app = create_app()

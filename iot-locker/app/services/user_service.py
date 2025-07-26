@@ -4,25 +4,33 @@ from passlib.hash import pbkdf2_sha256
 
 class UserService:
     @staticmethod
-    def create_user(data):
-        """Create a new user with the provided data"""
-        # Kiểm tra username đã tồn tại chưa
+    def get_user_by_username(username):
+        return UserModel.query.filter_by(username=username).first()
+    @staticmethod
+    def create_user(data, creator_role=None):
+        """
+        Đăng ký qua /register (không truyền role) thì luôn là admin.
+        Nếu gọi từ code và truyền 'role' trong data thì sẽ tạo đúng role đó.
+        """
         if UserModel.query.filter_by(username=data['username']).first():
             return None
 
-        # Hash password before storing
-        hashed_password = pbkdf2_sha256.hash(data['password'])
+        # Nếu gọi từ code và truyền role, thì dùng role đó
+        if 'role' in data and data['role'] in ['admin', 'user']:
+            role = data['role']
+        else:
+            # Đăng ký qua /register (không truyền role) thì luôn là admin
+            role = 'admin'
 
+        hashed_password = pbkdf2_sha256.hash(data['password'])
         user = UserModel(
             username=data['username'],
             password=hashed_password,
-            role=data.get('role'),
+            role=role,
             full_name=data.get('full_name')
         )
-
         db.session.add(user)
         db.session.commit()
-
         return user
 
     @staticmethod
@@ -58,9 +66,6 @@ class UserService:
         user = UserModel.query.get(user_id)
         if not user:
             return False
-        db.session.delete(user)
-        db.session.commit()
-        return True
         db.session.delete(user)
         db.session.commit()
         return True
