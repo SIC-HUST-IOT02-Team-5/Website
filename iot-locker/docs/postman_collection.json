@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "IoT Locker API (Full CRUD & Feature Folders)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Tạo user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"123456\",\n  \"full_name\": \"User One\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/users", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users"] }
+          }
+        },
+        {
+          "name": "Lấy danh sách user",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/users", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users"] }
+          }
+        },
+        {
+          "name": "Xem chi tiết user",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+          }
+        },
+        {
+          "name": "Cập nhật user",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"User One Updated\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+          }
+        },
+        {
+          "name": "Xoá user",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cell",
+      "item": [
+        {
+          "name": "Tạo cell",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cell 1\",\n  \"status\": \"closed\",\n  \"is_locked\": \"locked\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/cells", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells"] }
+          }
+        },
+        {
+          "name": "Lấy danh sách cell",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/cells", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells"] }
+          }
+        },
+        {
+          "name": "Xem chi tiết cell",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+          }
+        },
+        {
+          "name": "Cập nhật cell",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"open\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+          }
+        },
+        {
+          "name": "Xoá cell",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+          }
+        },
+        {
+          "name": "Lấy log mở/đóng cell",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/cells/1/events", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1", "events"] }
+          }
+        },
+        {
+          "name": "Lịch sử mượn/trả theo cell",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/cells/1/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1", "borrowings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Item",
+      "item": [
+        {
+          "name": "Tạo item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cell_id\": 1,\n  \"name\": \"Laptop\",\n  \"description\": \"Dell XPS\",\n  \"status\": \"available\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/items", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items"] }
+          }
+        },
+        {
+          "name": "Lấy danh sách item",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/items", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items"] }
+          }
+        },
+        {
+          "name": "Xem chi tiết item",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+          }
+        },
+        {
+          "name": "Cập nhật item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"lost\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+          }
+        },
+        {
+          "name": "Xoá item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Borrowings",
+      "item": [
+        {
+          "name": "Mượn đồ",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"item_id\": 1,\n  \"expected_return_at\": \"2025-08-01T10:00:00\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings"] }
+          }
+        },
+        {
+          "name": "Trả đồ",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "http://localhost:5000/borrowings/1/return", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings", "1", "return"] }
+          }
+        },
+        {
+          "name": "Lấy danh sách borrowings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings"] }
+          }
+        },
+        {
+          "name": "Xem chi tiết borrowing",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/borrowings/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -146,3 +146,11 @@ docker compose exec db bash
 
 - Đảm bảo đã cài đầy đủ dependencies trong requirements.txt
 - Build lại container với `docker compose build`
+
+## Testing API với Postman
+
+- File collection mẫu đã được cung cấp tại: `docs/postman_collection.json`
+- Để import vào Postman:
+  1. Mở Postman → Import → Chọn file `docs/postman_collection.json`
+  2. Sử dụng các folder (User, Cell, Item, Borrowings, ...) để test từng tính năng CRUD.
+  3. Đối chiếu với db xem có đúng hay không 🤔
