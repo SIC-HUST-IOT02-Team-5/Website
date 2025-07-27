@@ -32,9 +32,14 @@ def create_cell():
 @cell_bp.route('/cells/<int:cell_id>', methods=['PATCH'])
 def update_cell(cell_id):
     data = request.get_json()
+    user_id = data.get('user_id')  # Lấy user_id trước khi validate
+    # Loại bỏ user_id khỏi data trước khi validate
+    data_for_validate = dict(data)
+    data_for_validate.pop('user_id', None)
     try:
-        validated_data = cell_schema.load(data, partial=True)
-        cell = CellService.update_cell(cell_id, validated_data)
+        validated_data = cell_schema.load(data_for_validate, partial=True)
+        # Truyền user_id vào service riêng biệt
+        cell = CellService.update_cell(cell_id, validated_data, user_id=user_id)
         if not cell:
             return {"message": "Cell not found"}, 404
         return cell_schema.dump(cell), 200

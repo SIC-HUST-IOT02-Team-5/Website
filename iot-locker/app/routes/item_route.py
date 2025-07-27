@@ -25,19 +25,19 @@ def create_item():
     item, error = ItemService.create_item(data, user_role)
     if error:
         return jsonify({'error': error}), 403
-    return item_schema.jsonify(item), 201
+    return jsonify(item_schema.dump(item)), 201
 
 @item_bp.route('/items', methods=['GET'])
 def get_all_items():
     items = ItemService.get_all_items()
-    return items_schema.jsonify(items), 200
+    return jsonify(items_schema.dump(items)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['GET'])
 def get_item(item_id):
     item = ItemService.get_item(item_id)
     if not item:
         return jsonify({'error': 'Item not found'}), 404
-    return item_schema.jsonify(item), 200
+    return jsonify(item_schema.dump(item)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['PUT', 'PATCH'])
 def update_item(item_id):
@@ -48,7 +48,7 @@ def update_item(item_id):
     item, error = ItemService.update_item(item_id, data, user_role)
     if error:
         return jsonify({'error': error}), 403
-    return item_schema.jsonify(item), 200
+    return jsonify(item_schema.dump(item)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
@@ -62,4 +62,4 @@ def delete_item(item_id):
 def get_items_by_cell(cell_id):
     items = ItemService.get_all_items()
     filtered = [item for item in items if item.cell_id == cell_id]
-    return items_schema.jsonify(filtered), 200
+    return jsonify(items_schema.dump(filtered)), 200
