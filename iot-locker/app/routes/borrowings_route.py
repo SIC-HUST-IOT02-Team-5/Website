@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from app.schemas.borrowings_schema import BorrowingSchema
 from app.services.borrowings_service import BorrowingsService
+from flask_jwt_extended import jwt_required
 
 borrowings_bp = Blueprint('borrowings_bp', __name__)
 borrowing_schema = BorrowingSchema()
 borrowings_schema = BorrowingSchema(many=True)
 
 @borrowings_bp.route('/borrowings', methods=['POST'])
+@jwt_required()
 def borrow_item():
     data = request.get_json()
     errors = borrowing_schema.validate(data)
@@ -23,6 +25,7 @@ def borrow_item():
     return borrowing_schema.dump(borrowing), 201
 
 @borrowings_bp.route('/borrowings/<int:borrowing_id>/return', methods=['PATCH'])
+@jwt_required()
 def return_item(borrowing_id):
     borrowing, error = BorrowingsService.return_item(borrowing_id)
     if error:

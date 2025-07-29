@@ -5,51 +5,199 @@
   },
   "item": [
     {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n \t\"username\": \"admin\",\n \t\"password\": \"123456\",\n \t\"full_name\": \"Admin User\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n \t\"username\": \"admin\",\n \t\"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "User",
       "item": [
         {
           "name": "Tạo user",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"123456\",\n  \"full_name\": \"User One\"\n}"
+              "raw": "{\n \t\"username\": \"user1\",\n \t\"password\": \"123456\",\n \t\"full_name\": \"User One\",\n \t\"role\": \"user\" // user or admin\n}"
             },
-            "url": { "raw": "http://localhost:5000/users", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users"] }
+            "url": {
+              "raw": "http://localhost:5000/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "users"
+              ]
+            }
           }
         },
         {
           "name": "Lấy danh sách user",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/users", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "users"
+              ]
+            }
           }
         },
         {
           "name": "Xem chi tiết user",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/users/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "users",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Cập nhật user",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"User One Updated\"\n}"
+              "raw": "{\n \t\"full_name\": \"User One Updated\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+            "url": {
+              "raw": "http://localhost:5000/users/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "users",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Xoá user",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "http://localhost:5000/users/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["users", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/users/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "users",
+                "1"
+              ]
+            }
           }
         }
       ]
@@ -61,59 +209,184 @@
           "name": "Tạo cell",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Cell 1\",\n  \"status\": \"closed\",\n  \"is_locked\": \"locked\"\n}"
+              "raw": "{\n \t\"name\": \"Cell 1\",\n \t\"status\": \"closed\",\n \t\"is_locked\": \"locked\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/cells", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells"] }
+            "url": {
+              "raw": "http://localhost:5000/cells",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells"
+              ]
+            }
           }
         },
         {
           "name": "Lấy danh sách cell",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/cells", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/cells",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells"
+              ]
+            }
           }
         },
         {
           "name": "Xem chi tiết cell",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/cells/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Cập nhật cell",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"open\"\n}"
+              "raw": "{\n \t\"status\": \"open\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+            "url": {
+              "raw": "http://localhost:5000/cells/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Xoá cell",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "http://localhost:5000/cells/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/cells/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Lấy log mở/đóng cell",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/cells/1/events", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1", "events"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/cells/1/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells",
+                "1",
+                "events"
+              ]
+            }
           }
         },
         {
           "name": "Lịch sử mượn/trả theo cell",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/cells/1/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["cells", "1", "borrowings"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/cells/1/borrowings",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "cells",
+                "1",
+                "borrowings"
+              ]
+            }
           }
         }
       ]
@@ -125,45 +398,134 @@
           "name": "Tạo item",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cell_id\": 1,\n  \"name\": \"Laptop\",\n  \"description\": \"Dell XPS\",\n  \"status\": \"available\"\n}"
+              "raw": "{\n \t\"cell_id\": 1,\n \t\"name\": \"Laptop\",\n \t\"description\": \"Dell XPS\",\n \t\"status\": \"available\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/items", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items"] }
+            "url": {
+              "raw": "http://localhost:5000/items",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "items"
+              ]
+            }
           }
         },
         {
           "name": "Lấy danh sách item",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/items", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/items",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "items"
+              ]
+            }
           }
         },
         {
           "name": "Xem chi tiết item",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/items/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "items",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Cập nhật item",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"lost\"\n}"
+              "raw": "{\n \t\"status\": \"lost\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+            "url": {
+              "raw": "http://localhost:5000/items/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "items",
+                "1"
+              ]
+            }
           }
         },
         {
           "name": "Xoá item",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "http://localhost:5000/items/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["items", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/items/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "items",
+                "1"
+              ]
+            }
           }
         }
       ]
@@ -175,34 +537,107 @@
           "name": "Mượn đồ",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": 1,\n  \"item_id\": 1,\n  \"expected_return_at\": \"2025-08-01T10:00:00\"\n}"
+              "raw": "{\n \t\"user_id\": 1,\n \t\"item_id\": 1,\n \t\"expected_return_at\": \"2025-08-01T10:00:00\"\n}"
             },
-            "url": { "raw": "http://localhost:5000/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings"] }
+            "url": {
+              "raw": "http://localhost:5000/borrowings",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "borrowings"
+              ]
+            }
           }
         },
         {
           "name": "Trả đồ",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "http://localhost:5000/borrowings/1/return", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings", "1", "return"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/borrowings/1/return",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "borrowings",
+                "1",
+                "return"
+              ]
+            }
           }
         },
         {
           "name": "Lấy danh sách borrowings",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/borrowings", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/borrowings",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "borrowings"
+              ]
+            }
           }
         },
         {
           "name": "Xem chi tiết borrowing",
           "request": {
             "method": "GET",
-            "url": { "raw": "http://localhost:5000/borrowings/1", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["borrowings", "1"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <access_token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/borrowings/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "borrowings",
+                "1"
+              ]
+            }
           }
         }
       ]

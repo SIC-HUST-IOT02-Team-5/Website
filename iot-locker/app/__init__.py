@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_jwt_extended import JWTManager
 from app.extensions import db, migrate
 from app.routes.user_route import user_bp
 from app.routes.cell_route import cell_bp
@@ -6,10 +7,14 @@ from app.routes.item_route import item_bp
 from app.routes.cell_event_route import cell_event_bp
 from app.routes.borrowings_route import borrowings_bp
 from app.auth.auth_route import auth_bp
+import os
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+
+    JWTManager(app)
 
     # Initialize extensions
     db.init_app(app)

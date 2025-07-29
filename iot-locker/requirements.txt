@@ -9,3 +9,4 @@ marshmallow-sqlalchemy==0.29.0
 marshmallow-enum==1.5.1
 passlib==1.7.4
 cryptography==42.0.5
+Flask-JWT-Extended==4.6.0

@@ -2,8 +2,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.item_service import ItemService
 from app.schemas.item_schema import ItemSchema
-from app.models.item_model import ItemStatus
-from datetime import datetime
+from flask_jwt_extended import jwt_required
 
 item_bp = Blueprint('item', __name__)
 item_schema = ItemSchema()
@@ -19,6 +18,7 @@ def get_username():
     return request.args.get('username', 'unknown')
 
 @item_bp.route('/items', methods=['POST'])
+@jwt_required()
 def create_item():
     user_role = get_user_role()
     data = request.get_json()
@@ -28,11 +28,13 @@ def create_item():
     return jsonify(item_schema.dump(item)), 201
 
 @item_bp.route('/items', methods=['GET'])
+@jwt_required()
 def get_all_items():
     items = ItemService.get_all_items()
     return jsonify(items_schema.dump(items)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['GET'])
+@jwt_required()
 def get_item(item_id):
     item = ItemService.get_item(item_id)
     if not item:
@@ -40,6 +42,7 @@ def get_item(item_id):
     return jsonify(item_schema.dump(item)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['PUT', 'PATCH'])
+@jwt_required()
 def update_item(item_id):
     user_role = get_user_role()
     username = get_username()
@@ -51,6 +54,7 @@ def update_item(item_id):
     return jsonify(item_schema.dump(item)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['DELETE'])
+@jwt_required()
 def delete_item(item_id):
     user_role = get_user_role()
     success, error = ItemService.delete_item(item_id, user_role)
@@ -59,6 +63,7 @@ def delete_item(item_id):
     return jsonify({'message': 'Item deleted'}), 200
 
 @item_bp.route('/items/cell/<int:cell_id>', methods=['GET'])
+@jwt_required()
 def get_items_by_cell(cell_id):
     items = ItemService.get_all_items()
     filtered = [item for item in items if item.cell_id == cell_id]

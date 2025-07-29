@@ -2,10 +2,13 @@ from flask import Blueprint, request, jsonify
 from app.schemas.user_schema import UserSchema
 from app.auth.auth_service import AuthService
 
+from flask_jwt_extended import create_access_token
+
 auth_bp = Blueprint('auth_bp', __name__)
 user_schema = UserSchema()
 
-# Đăng nhập
+
+# Đăng nhập trả về access_token (JWT) và thông tin user
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -14,11 +17,13 @@ def login():
     user = AuthService.login(data['username'], data['password'])
     if not user:
         return jsonify({"error": "Invalid username or password"}), 401
+    access_token = create_access_token(identity=str(user.id))
     user_info = {
         "id": user.id,
         "username": user.username,
         "role": user.role.value,
-        "full_name": user.full_name
+        "full_name": user.full_name,
+        "access_token": access_token
     }
     return jsonify(user_info), 200
 
