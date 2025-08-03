@@ -42,3 +42,19 @@ class BorrowingsService:
             item.status = ItemStatus.available
         db.session.commit()
         return borrowing, None
+        
+    @staticmethod
+    def get_all_borrowings():
+        return BorrowingModel.query.all()
+        
+    @staticmethod
+    def get_borrowing(borrowing_id):
+        return BorrowingModel.query.get(borrowing_id)
+        
+    @staticmethod
+    def get_borrowings_by_cell(cell_id):
+        # Lấy danh sách mượn/trả theo cell_id
+        # Cần join từ borrowings qua items để lọc theo cell_id
+        return BorrowingModel.query.join(
+            ItemModel, BorrowingModel.item_id == ItemModel.id
+        ).filter(ItemModel.cell_id == cell_id).all()
