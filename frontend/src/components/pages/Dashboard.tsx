@@ -30,10 +30,17 @@ const Dashboard: React.FC = () => {
 
   const getCellColor = (status: string) => {
     switch (status) {
-      case 'empty': return '#C5F280';
-      case 'occupied': return '#F2C879';
-      case 'maintenance': return '#FF6B6B';
-      default: return '#E0E0E0';
+      case 'open': return '#C4F8E2'; // Light green for open cells
+      case 'closed': return '#E6F3FF'; // Light blue for closed cells
+      default: return '#F5F5F5'; // Light gray for unknown status
+    }
+  };
+
+  const getCellTextColor = (status: string) => {
+    switch (status) {
+      case 'open': return '#06A561'; // Dark green text for open cells
+      case 'closed': return '#1890FF'; // Blue text for closed cells
+      default: return '#666666'; // Gray text for unknown status
     }
   };
 
@@ -188,18 +195,17 @@ const Dashboard: React.FC = () => {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
+              border: `1px solid ${getCellTextColor(cell.status)}20`,
             }}>
-              <div style={{ fontWeight: 600, fontSize: 16, color: '#333' }}>
-                {cell.cell_number}
+              <div style={{ fontWeight: 600, fontSize: 16, color: getCellTextColor(cell.status) }}>
+                {cell.name}
               </div>
-              <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: getCellTextColor(cell.status), marginTop: 4, textTransform: 'capitalize' }}>
                 {cell.status}
               </div>
-              {cell.item && (
-                <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>
-                  {cell.item.name}
-                </div>
-              )}
+              <div style={{ fontSize: 10, color: getCellTextColor(cell.status), marginTop: 2, opacity: 0.7 }}>
+                {cell.is_locked === 'locked' ? '🔒 Locked' : '🔓 Unlocked'}
+              </div>
             </div>
           ))}
         </div>

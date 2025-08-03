@@ -23,8 +23,8 @@ const ItemsManagement: React.FC = () => {
     status: 'available' as 'available' | 'borrowed' | 'maintenance'
   });
   const [cellFormData, setCellFormData] = useState({
-    cell_number: '',
-    status: 'empty' as 'empty' | 'occupied' | 'maintenance'
+    name: '',
+    status: 'closed' as 'closed' | 'open'
   });
   const [borrowData, setBorrowData] = useState({
     user_id: '',
@@ -162,8 +162,8 @@ const ItemsManagement: React.FC = () => {
 
   const resetCellForm = () => {
     setCellFormData({
-      cell_number: '',
-      status: 'empty'
+      name: '',
+      status: 'closed'
     });
   };
 
@@ -292,7 +292,7 @@ const ItemsManagement: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Add Item
+                + Add Item
               </button>
             </div>
           )}
@@ -316,7 +316,7 @@ const ItemsManagement: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Add Cell
+                + Add Cell
               </button>
             </div>
           )}
@@ -403,7 +403,7 @@ const ItemsManagement: React.FC = () => {
                       {item.description}
                     </td>
                     <td style={{ padding: '16px 24px', color: '#5A607F' }}>
-                      {cells.find(cell => cell.id === item.cell_id)?.cell_number || `Cell ${item.cell_id}`}
+                      {cells.find(cell => cell.id === item.cell_id)?.name || `Cell ${item.cell_id}`}
                     </td>
                     <td style={{ padding: '16px 24px' }}>
                       <span style={{ 
@@ -525,21 +525,7 @@ const ItemsManagement: React.FC = () => {
             alignItems: 'center',
           }}>
             <span>Cells Overview</span>
-            <button 
-              style={{
-                background: '#fff',
-                color: '#667eea',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontSize: '14px',
-              }}
-              onClick={() => setShowCreateCellModal(true)}
-            >
-              + Add Cell
-            </button>
+
           </div>
           <div style={{
             display: 'grid',
@@ -565,15 +551,15 @@ const ItemsManagement: React.FC = () => {
                     marginBottom: '12px' 
                   }}>
                     <h3 style={{ margin: 0, color: '#131523', fontSize: '16px', fontWeight: 600 }}>
-                      Cell {cell.cell_number}
+                      {cell.name}
                     </h3>
                     <span style={{
                       padding: '4px 8px',
                       borderRadius: '4px',
                       fontSize: '12px',
                       fontWeight: 500,
-                      background: cell.status === 'empty' ? '#e6f7ff' : cell.status === 'occupied' ? '#fff2e8' : '#ffebf0',
-                      color: cell.status === 'empty' ? '#1890ff' : cell.status === 'occupied' ? '#fa8c16' : '#eb2f96',
+                      background: cell.status === 'closed' ? '#E6F3FF' : '#C4F8E2',
+                      color: cell.status === 'closed' ? '#1890FF' : '#06A561',
                     }}>
                       {cell.status}
                     </span>
@@ -722,7 +708,7 @@ const ItemsManagement: React.FC = () => {
                   <option value="">Select a cell</option>
                   {cells.map(cell => (
                     <option key={cell.id} value={cell.id}>
-                      {cell.cell_number}
+                      {cell.name}
                     </option>
                   ))}
                 </select>
@@ -816,7 +802,7 @@ const ItemsManagement: React.FC = () => {
             <form onSubmit={handleBorrowItem}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Your User ID
+                  User ID
                 </label>
                 <input
                   type="number"
@@ -933,12 +919,12 @@ const ItemsManagement: React.FC = () => {
                   fontWeight: 500,
                   color: '#131523'
                 }}>
-                  Cell Number
+                  Cell Name
                 </label>
                 <input
                   type="text"
-                  value={cellFormData.cell_number}
-                  onChange={(e) => setCellFormData({ ...cellFormData, cell_number: e.target.value })}
+                  value={cellFormData.name}
+                  onChange={(e) => setCellFormData({ ...cellFormData, name: e.target.value })}
                   required
                   style={{
                     width: '100%',
@@ -949,7 +935,7 @@ const ItemsManagement: React.FC = () => {
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  placeholder="Enter cell number"
+                  placeholder="e.g., cell 1, cell 2, cell 3, cell 4"
                 />
               </div>
 
@@ -964,7 +950,7 @@ const ItemsManagement: React.FC = () => {
                 </label>
                 <select
                   value={cellFormData.status}
-                  onChange={(e) => setCellFormData({ ...cellFormData, status: e.target.value as 'empty' | 'occupied' | 'maintenance' })}
+                  onChange={(e) => setCellFormData({ ...cellFormData, status: e.target.value as 'closed' | 'open' })}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -975,9 +961,8 @@ const ItemsManagement: React.FC = () => {
                     boxSizing: 'border-box'
                   }}
                 >
-                  <option value="empty">Empty</option>
-                  <option value="occupied">Occupied</option>
-                  <option value="maintenance">Maintenance</option>
+                  <option value="closed">Closed</option>
+                  <option value="open">Open</option>
                 </select>
               </div>
 
@@ -990,7 +975,7 @@ const ItemsManagement: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowCreateCellModal(false);
-                    setCellFormData({ cell_number: '', status: 'empty' });
+                    setCellFormData({ name: '', status: 'closed' });
                   }}
                   style={{
                     background: '#E6E9F4',

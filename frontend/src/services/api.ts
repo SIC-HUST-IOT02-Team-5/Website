@@ -21,10 +21,11 @@ export interface Item {
 
 export interface Cell {
   id: number;
-  cell_number: string;
-  status: 'empty' | 'occupied' | 'maintenance';
-  item_id?: number;
-  item?: Item;
+  name: string;
+  status: 'open' | 'closed';
+  is_locked: 'locked' | 'unlocked';
+  last_open_at?: string;
+  last_close_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -228,7 +229,8 @@ class ApiService {
   }
 
   async createCell(cellData: {
-    cell_number: string;
+    name: string;
+    status?: string;
   }): Promise<Cell> {
     const response = await fetch(`${API_BASE_URL}/cells`, {
       method: 'POST',
