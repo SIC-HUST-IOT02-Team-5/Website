@@ -1,26 +1,24 @@
-
 from flask import Blueprint, request, jsonify
 from app.services.item_service import ItemService
 from app.schemas.item_schema import ItemSchema
-from flask_jwt_extended import jwt_required
-from app.utils.token_helper import get_current_user, get_current_user_role, get_current_username
+from flask_jwt_extended import jwt_required, get_jwt
+from app.utils.role_required import role_required
 
 item_bp = Blueprint('item', __name__)
 item_schema = ItemSchema()
 items_schema = ItemSchema(many=True)
 
-def get_user_role():
-    return get_current_user_role()
 
-def get_username():
-    return get_current_username()
+
 
 @item_bp.route('/items', methods=['POST'])
 @jwt_required()
+@role_required('admin')
 def create_item():
-    user_role = get_user_role()
+    claims = get_jwt()
+    role = claims.get('role', 'user')
     data = request.get_json()
-    item, error = ItemService.create_item(data, user_role)
+    item, error = ItemService.create_item(data, role)
     if error:
         return jsonify({'error': error}), 403
     return jsonify(item_schema.dump(item)), 201
@@ -42,20 +40,23 @@ def get_item(item_id):
 @item_bp.route('/items/<int:item_id>', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_item(item_id):
-    user_role = get_user_role()
-    username = get_username()
+    claims = get_jwt()
+    role = claims.get('role', 'user')
+    username = claims.get('sub', 'unknown')
     data = request.get_json()
     # Nếu có update status (mượn/trả), không cần log
-    item, error = ItemService.update_item(item_id, data, user_role)
+    item, error = ItemService.update_item(item_id, data, role)
     if error:
         return jsonify({'error': error}), 403
     return jsonify(item_schema.dump(item)), 200
 
 @item_bp.route('/items/<int:item_id>', methods=['DELETE'])
 @jwt_required()
+@role_required('admin')
 def delete_item(item_id):
-    user_role = get_user_role()
-    success, error = ItemService.delete_item(item_id, user_role)
+    claims = get_jwt()
+    role = claims.get('role', 'user')
+    success, error = ItemService.delete_item(item_id, role)
     if not success:
         return jsonify({'error': error}), 403
     return jsonify({'message': 'Item deleted'}), 200

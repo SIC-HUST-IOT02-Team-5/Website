@@ -17,7 +17,8 @@ def login():
     user = AuthService.login(data['username'], data['password'])
     if not user:
         return jsonify({"error": "Invalid username or password"}), 401
-    access_token = create_access_token(identity=str(user.id))
+    # Thêm role vào JWT claims
+    access_token = create_access_token(identity=str(user.id), additional_claims={"role": user.role.value})
     user_info = {
         "id": user.id,
         "username": user.username,

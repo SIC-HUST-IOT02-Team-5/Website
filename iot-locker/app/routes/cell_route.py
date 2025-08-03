@@ -1,8 +1,9 @@
 # app/routes/cell_route.py
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 from flask import Blueprint, request, jsonify
 from app.schemas.cell_schema import CellSchema
 from app.services.cell_service import CellService
+from app.utils.role_required import role_required
 
 cell_bp = Blueprint('cells', __name__)
 cell_schema = CellSchema()
@@ -24,6 +25,7 @@ def get_cell(cell_id):
 
 @cell_bp.route('/cells', methods=['POST'])
 @jwt_required()
+@role_required('admin')
 def create_cell():
     data = request.get_json()
     try:
@@ -35,15 +37,14 @@ def create_cell():
 
 @cell_bp.route('/cells/<int:cell_id>', methods=['PATCH'])
 @jwt_required()
+@role_required('admin')
 def update_cell(cell_id):
     data = request.get_json()
-    user_id = data.get('user_id')  # Lấy user_id trước khi validate
-    # Loại bỏ user_id khỏi data trước khi validate
-    data_for_validate = dict(data)
-    data_for_validate.pop('user_id', None)
+    claims = get_jwt()
+    user_id = claims.get('sub')  # Get user_id from JWT claims
     try:
-        validated_data = cell_schema.load(data_for_validate, partial=True)
-        # Truyền user_id vào service riêng biệt
+        validated_data = cell_schema.load(data, partial=True)
+        # Pass user_id to the service
         cell = CellService.update_cell(cell_id, validated_data, user_id=user_id)
         if not cell:
             return {"message": "Cell not found"}, 404
@@ -53,8 +54,18 @@ def update_cell(cell_id):
 
 @cell_bp.route('/cells/<int:cell_id>', methods=['DELETE'])
 @jwt_required()
+@role_required('admin')
 def delete_cell(cell_id):
     cell = CellService.delete_cell(cell_id)
     if not cell:
         return {"message": "Cell not found"}, 404
     return {"message": "Cell deleted"}, 200
+    
+@cell_bp.route('/cells/<int:cell_id>/borrowings', methods=['GET'])
+@jwt_required()
+def get_cell_borrowings(cell_id):
+    from app.services.borrowings_service import BorrowingsService
+    from app.schemas.borrowings_schema import BorrowingSchema
+    
+    borrowings = BorrowingsService.get_borrowings_by_cell(cell_id)
+    return jsonify(BorrowingSchema(many=True).dump(borrowings)), 200

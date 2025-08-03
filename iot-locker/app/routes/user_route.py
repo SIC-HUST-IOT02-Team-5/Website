@@ -3,8 +3,8 @@ from flask import Blueprint, request, jsonify
 from app.schemas.user_schema import UserSchema
 from app.services.user_service import UserService
 from app.auth.auth_service import AuthService
-from flask_jwt_extended import jwt_required
-from app.utils.token_helper import get_current_user, is_admin
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from app.utils.role_required import role_required
 
 user_bp = Blueprint('user_bp', __name__)
 user_schema = UserSchema()
@@ -18,7 +18,11 @@ def create_user_route():
     errors = user_schema.validate(data)
     if errors:
         return jsonify({"error": errors}), 400
-    if not is_admin():
+        
+    # Lấy role từ JWT thay vì từ query parameter
+    claims = get_jwt()
+    creator_role = claims.get("role")
+    if creator_role != 'admin':
         return jsonify({"error": "Permission denied: Only admin can create users."}), 403
     user, error = AuthService.create_user_by_admin(data, 'admin')
     if user is None:
@@ -53,6 +57,7 @@ def update_user_route(user_id):
 
 @user_bp.route('/users/<int:user_id>', methods=['DELETE'])
 @jwt_required()
+@role_required("admin")  # Chỉ admin mới được xóa user
 def delete_user_route(user_id):
     success = UserService.delete_user(user_id)
     if not success:
