@@ -5,7 +5,7 @@ import styles from './MainLayout.module.css'
 const navItems = [
   { label: 'Dashboard', icon: '📊', path: '/' },
   { label: 'Users Management', icon: '👤', path: '/users' },
-  { label: 'Items Management', icon: '�', path: '/categories' },
+  { label: 'Items & Cells Management', icon: '📦', path: '/categories' },
   { label: 'Actions Log', icon: '📝', path: '/actions' },
 ]
 
