@@ -10,7 +10,6 @@ items_schema = ItemSchema(many=True)
 
 
 
-# No longer needed - using JWT claims instead
 
 @item_bp.route('/items', methods=['POST'])
 @jwt_required()

@@ -20,3 +20,7 @@ class BorrowingModel(db.Model):
     note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    user = db.relationship('UserModel', backref='borrowings')
+    item = db.relationship('ItemModel', backref='borrowings')

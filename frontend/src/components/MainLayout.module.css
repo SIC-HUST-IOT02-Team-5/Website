@@ -1,0 +1,40 @@
+.mainLayout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 240px 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+  background: #f5f6fa;
+}
+.header {
+  grid-area: header;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar {
+  grid-area: sidebar;
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+  padding: 2rem 1rem;
+  min-width: 200px;
+}
+.mainContent {
+  grid-area: main;
+  padding: 1rem;
+}
+.footer {
+  grid-area: footer;
+  background: #fff;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+  padding: 1rem 2rem;
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+} 

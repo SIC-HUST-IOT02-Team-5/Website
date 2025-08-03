@@ -31,6 +31,13 @@ class BorrowingsService:
         return borrowing, None
 
     @staticmethod
+    def get_all_borrowings():
+        return BorrowingModel.query.options(
+            db.joinedload(BorrowingModel.user),
+            db.joinedload(BorrowingModel.item)
+        ).all()
+
+    @staticmethod
     def return_item(borrowing_id):
         borrowing = BorrowingModel.query.get(borrowing_id)
         if not borrowing or borrowing.status != BorrowStatus.borrowing:

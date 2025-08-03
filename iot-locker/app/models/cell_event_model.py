@@ -15,4 +15,8 @@ class CellEventModel(db.Model):
     event_type = db.Column(db.Enum(LockerEventType), nullable=False)
     timestamp = db.Column(db.DateTime, server_default=func.now(), nullable=False)
 
+    # Relationships
+    user = db.relationship('UserModel', backref='cell_events')
+    cell = db.relationship('CellModel', backref='events')
+
 
