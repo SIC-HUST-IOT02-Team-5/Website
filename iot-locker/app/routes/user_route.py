@@ -3,8 +3,8 @@ from flask import Blueprint, request, jsonify
 from app.schemas.user_schema import UserSchema
 from app.services.user_service import UserService
 from app.auth.auth_service import AuthService
-from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from flask_jwt_extended import jwt_required
+from app.utils.token_helper import get_current_user, is_admin
 
 user_bp = Blueprint('user_bp', __name__)
 user_schema = UserSchema()
@@ -18,10 +18,9 @@ def create_user_route():
     errors = user_schema.validate(data)
     if errors:
         return jsonify({"error": errors}), 400
-    creator_role = request.args.get('role')
-    if creator_role != 'admin':
+    if not is_admin():
         return jsonify({"error": "Permission denied: Only admin can create users."}), 403
-    user, error = AuthService.create_user_by_admin(data, creator_role)
+    user, error = AuthService.create_user_by_admin(data, 'admin')
     if user is None:
         return jsonify({"error": error}), 403 if error and 'Permission denied' in error else 400
     return user_schema.dump(user), 201

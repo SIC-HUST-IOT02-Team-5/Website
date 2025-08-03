@@ -1,4 +1,5 @@
 import React from 'react'
+import Header from './Header'
 import Sidebar from './Sidebar'
 import MainContent from './MainContent'
 import styles from './MainLayout.module.css'
@@ -19,17 +20,28 @@ const MainLayout: React.FC = () => {
       width: '100vw',
       background: '#F5F6FA',
       display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'flex-start',
+      flexDirection: 'column',
       boxSizing: 'border-box',
       margin: 0,
       padding: 0,
       overflowX: 'hidden',
       maxWidth: '100vw',
     }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0, padding: 0, maxWidth: '100vw', overflowX: 'hidden' }}>
-        <MainContent />
+      <Header />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        flex: 1,
+        alignItems: 'flex-start',
+        margin: 0,
+        padding: 0,
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+      }}>
+        <Sidebar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)', margin: 0, padding: 0, maxWidth: '100vw', overflowX: 'hidden' }}>
+          <MainContent />
+        </div>
       </div>
     </div>
   )

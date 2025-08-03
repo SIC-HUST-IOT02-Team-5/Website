@@ -6,13 +6,16 @@ from app.routes.cell_route import cell_bp
 from app.routes.item_route import item_bp
 from app.routes.cell_event_route import cell_event_bp
 from app.routes.borrowings_route import borrowings_bp
+from app.routes.dashboard_route import dashboard_bp
 from app.auth.auth_route import auth_bp
+from flask_cors import CORS
 import os
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+    CORS(app, origins=["http://localhost:5174"], supports_credentials=True)
 
     JWTManager(app)
 
@@ -27,6 +30,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(cell_event_bp)
     app.register_blueprint(borrowings_bp)
+    app.register_blueprint(dashboard_bp)
 
     # Error handlers
     @app.errorhandler(404)

@@ -21,5 +21,12 @@ class CellEventService:
         return event
 
     @staticmethod
+    def get_all_events():
+        return CellEventModel.query.options(
+            db.joinedload(CellEventModel.user),
+            db.joinedload(CellEventModel.cell)
+        ).order_by(CellEventModel.timestamp.desc()).all()
+
+    @staticmethod
     def get_events_by_cell(locker_id):
         return CellEventModel.query.filter_by(locker_id=locker_id).order_by(CellEventModel.timestamp.desc()).all()

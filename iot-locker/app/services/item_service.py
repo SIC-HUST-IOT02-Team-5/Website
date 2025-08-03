@@ -10,7 +10,11 @@ class ItemService:
         if user_role != 'admin':
             return None, 'Permission denied: Only admin can create items.'
         try:
-            item = ItemModel(**data)
+            # Filter data to only include valid ItemModel fields
+            allowed_fields = ['name', 'description', 'cell_id', 'status']
+            filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
+            
+            item = ItemModel(**filtered_data)
             db.session.add(item)
             db.session.commit()
             return item, None

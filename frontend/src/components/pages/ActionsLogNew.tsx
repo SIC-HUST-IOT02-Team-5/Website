@@ -62,9 +62,9 @@ const ActionsLog: React.FC = () => {
           id: `borrow_${borrowing.id}`,
           type: 'borrowing',
           action: borrowing.returned_at ? 'Item Returned' : 'Item Borrowed',
-          user: borrowing.user?.full_name || `User ${borrowing.user_id}`,
+          user: borrowing.user.full_name,
           timestamp: borrowing.returned_at || borrowing.borrowed_at,
-          details: `${borrowing.item?.name || 'Unknown Item'} (Cell ${borrowing.cell?.cell_number || borrowing.item?.cell_id || 'Unknown'})`,
+          details: `${borrowing.item.name} (Cell ${borrowing.cell.cell_number})`,
           status: borrowing.returned_at ? 'returned' : 'active'
         });
       });

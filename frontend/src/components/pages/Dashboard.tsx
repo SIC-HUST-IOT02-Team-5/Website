@@ -1,22 +1,58 @@
-import React from 'react'
-
-const boxStatus = [
-  { label: 'N1', color: '#F2C879' },
-  { label: 'N2', color: '#F2C879' },
-  { label: 'N3', color: '#C5F280' },
-  { label: 'N4', color: '#C5F280' },
-]
-
-const actions = [
-  { name: 'Tablet', box: 'N1', user: '12345678', date: '20.07.2025', status: 'OK' },
-  { name: 'Tablet', box: 'N2', user: '87654321', date: '21.07.2025', status: 'Pending' },
-  { name: 'Tablet', box: 'N1', user: '12345678', date: '20.07.2025', status: 'OK' },
-  { name: 'Tablet', box: 'N4', user: '87654321', date: '21.07.2025', status: 'Pending' },
-  { name: 'Tablet', box: 'N4', user: '12345678', date: '20.07.2025', status: 'OK' },
-  { name: 'Tablet', box: 'N2', user: '87654321', date: '21.07.2025', status: 'Pending' },
-]
+import React, { useState, useEffect } from 'react';
+import ApiService from '../../services/api';
+import type { DashboardStats, Cell } from '../../services/api';
 
 const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [cells, setCells] = useState<Cell[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [statsData, cellsData] = await Promise.all([
+          ApiService.getDashboardStats(),
+          ApiService.getCells()
+        ]);
+        setStats(statsData);
+        setCells(cellsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getCellColor = (status: string) => {
+    switch (status) {
+      case 'empty': return '#C5F280';
+      case 'occupied': return '#F2C879';
+      case 'maintenance': return '#FF6B6B';
+      default: return '#E0E0E0';
+    }
+  };
+
+  if (loading) {
+    return (
+      <main style={{ padding: '2rem', background: '#F5F6FA', minHeight: '100vh' }}>
+        <div>Loading dashboard...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main style={{ padding: '2rem', background: '#F5F6FA', minHeight: '100vh' }}>
+        <div style={{ color: 'red' }}>Error: {error}</div>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{
@@ -52,7 +88,8 @@ const Dashboard: React.FC = () => {
           margin: 0,
         }}>Dashboard</h1>
       </div>
-      {/* Cards Row */}
+      
+      {/* Stats Cards Row */}
       <div
         style={{
           width: '100%',
@@ -64,134 +101,189 @@ const Dashboard: React.FC = () => {
           gap: 32,
           marginBottom: 32,
           flexWrap: 'wrap',
-          overflowX: 'hidden',
         }}
       >
-        {/* Item Card */}
         <div style={{
-          width: '100%',
-          maxWidth: 320,
-          minWidth: 180,
-          height: 212,
-          background: '#fff',
-          borderRadius: 6,
-          boxShadow: '0px 1px 4px rgba(21, 34, 50, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1px 12px',
-          gap: 10,
-          flex: '1 1 208px',
-          margin: '0.5rem',
+          background: '#FFFFFF',
+          borderRadius: 12,
+          padding: '24px',
+          minWidth: 200,
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}>
-          <div style={{
-            fontWeight: 700,
-            fontSize: 24,
-            lineHeight: '28px',
-            color: '#111111',
-            marginBottom: 16,
-          }}>Item</div>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span style={{ fontWeight: 400, fontSize: 16, color: '#5A607F' }}>Available</span>
-              <span style={{ background: '#ECF2FF', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 400, fontSize: 10, color: '#5A607F' }}>i</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span style={{ fontWeight: 400, fontSize: 16, color: '#5A607F' }}>Pending</span>
-              <span style={{ background: '#ECF2FF', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 400, fontSize: 10, color: '#5A607F' }}>i</span>
-            </div>
-          </div>
+          <h3 style={{ margin: 0, color: '#666', fontSize: 14 }}>Total Users</h3>
+          <p style={{ margin: '8px 0 0 0', fontSize: 32, fontWeight: 700, color: '#333' }}>
+            {stats?.total_users || 0}
+          </p>
         </div>
-        {/* Box Status Card */}
+        
         <div style={{
-          width: '100%',
-          maxWidth: 320,
-          minWidth: 180,
-          height: 212,
-          background: '#fff',
-          borderRadius: 6,
-          boxShadow: '0px 1px 4px rgba(21, 34, 50, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1px 12px',
-          gap: 10,
-          flex: '1 1 208px',
-          margin: '0.5rem',
+          background: '#FFFFFF',
+          borderRadius: 12,
+          padding: '24px',
+          minWidth: 200,
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}>
-          <div style={{
-            fontWeight: 700,
-            fontSize: 24,
-            lineHeight: '20px',
-            color: '#111110',
-            marginBottom: 16,
-          }}>Box Status</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%', marginTop: 12 }}>
-            {boxStatus.map((b, i) => (
-              <div key={b.label} style={{
-                background: b.color,
-                borderRadius: 6,
-                width: '100%',
-                minWidth: 48,
-                height: 68,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 400,
-                fontSize: 16,
-                color: '#5A607F',
-              }}>{b.label}</div>
-            ))}
-          </div>
+          <h3 style={{ margin: 0, color: '#666', fontSize: 14 }}>Total Items</h3>
+          <p style={{ margin: '8px 0 0 0', fontSize: 32, fontWeight: 700, color: '#333' }}>
+            {stats?.total_items || 0}
+          </p>
+        </div>
+        
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: 12,
+          padding: '24px',
+          minWidth: 200,
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: 0, color: '#666', fontSize: 14 }}>Available Items</h3>
+          <p style={{ margin: '8px 0 0 0', fontSize: 32, fontWeight: 700, color: '#28a745' }}>
+            {stats?.available_items || 0}
+          </p>
+        </div>
+        
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: 12,
+          padding: '24px',
+          minWidth: 200,
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: 0, color: '#666', fontSize: 14 }}>Active Borrowings</h3>
+          <p style={{ margin: '8px 0 0 0', fontSize: 32, fontWeight: 700, color: '#dc3545' }}>
+            {stats?.active_borrowings || 0}
+          </p>
         </div>
       </div>
-      {/* Recent Actions Table */}
+
+      {/* Cell Status Card */}
       <div style={{
         width: '100%',
-        margin: 0,
+        maxWidth: 800,
         background: '#fff',
-        border: '1px solid #E6E9F4',
-        borderRadius: 6,
-        boxSizing: 'border-box',
-        marginBottom: 40,
-        overflowX: 'auto',
+        borderRadius: 12,
+        boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
+        padding: '24px',
+        marginBottom: 32,
       }}>
-        <div style={{ fontWeight: 700, fontSize: 16, color: '#131523', padding: '26px 36px 0 36px', lineHeight: '24px' }}>Recent Actions</div>
-        <div style={{ width: '100%', overflowX: 'auto' }}>
-          <table style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', background: 'none', marginTop: 16 }}>
-            <thead>
-              <tr style={{ color: '#5A607F', fontWeight: 400, fontSize: 14, lineHeight: '20px', height: 44 }}>
-                <th style={{ textAlign: 'left', padding: '12px 8px' }}>Item's Name</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px' }}>Box</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px' }}>User ID</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px' }}>Date</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {actions.map((a, i) => (
-                <tr key={i} style={{ borderTop: '1px solid #E6E9F4', fontSize: 14, color: '#131523', height: 52 }}>
-                  <td style={{ padding: '8px', fontWeight: 500 }}>{a.name}</td>
-                  <td style={{ padding: '8px' }}>{a.box}</td>
-                  <td style={{ padding: '8px' }}>{a.user}</td>
-                  <td style={{ padding: '8px' }}>{a.date}</td>
-                  <td style={{ padding: '8px' }}>
-                    {a.status === 'OK' ? (
-                      <span style={{ background: '#C4F8E2', color: '#06A561', borderRadius: 4, padding: '2px 14px', fontWeight: 400, fontSize: 14, display: 'inline-block', minWidth: 29, textAlign: 'center' }}>OK</span>
-                    ) : (
-                      <span style={{ background: '#E6E9F4', color: '#5A607F', borderRadius: 4, padding: '2px 14px', fontWeight: 400, fontSize: 14, display: 'inline-block', minWidth: 54, textAlign: 'center' }}>Pending</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h3 style={{
+          fontWeight: 700,
+          fontSize: 20,
+          color: '#131523',
+          marginBottom: 20,
+        }}>Cell Status</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16 }}>
+          {cells.map((cell) => (
+            <div key={cell.id} style={{
+              background: getCellColor(cell.status),
+              borderRadius: 8,
+              padding: '16px',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <div style={{ fontWeight: 600, fontSize: 16, color: '#333' }}>
+                {cell.cell_number}
+              </div>
+              <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                {cell.status}
+              </div>
+              {cell.item && (
+                <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>
+                  {cell.item.name}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
-    </main>
-  )
-}
 
-export default Dashboard 
+      {/* Recent Activities Table */}
+      {stats?.recent_activities && stats.recent_activities.length > 0 && (
+        <div style={{
+          width: '100%',
+          background: '#fff',
+          border: '1px solid #E6E9F4',
+          borderRadius: 12,
+          boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: 40,
+          overflowX: 'auto',
+        }}>
+          <div style={{ 
+            fontWeight: 700, 
+            fontSize: 20, 
+            color: '#131523', 
+            padding: '24px 24px 0 24px' 
+          }}>
+            Recent Activities
+          </div>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
+            <table style={{ 
+              width: '100%', 
+              minWidth: 600, 
+              borderCollapse: 'collapse', 
+              marginTop: 16 
+            }}>
+              <thead>
+                <tr style={{ 
+                  color: '#5A607F', 
+                  fontWeight: 500, 
+                  fontSize: 14, 
+                  borderBottom: '1px solid #E6E9F4' 
+                }}>
+                  <th style={{ textAlign: 'left', padding: '16px 24px' }}>User</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px' }}>Item</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px' }}>Borrowed At</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px' }}>Expected Return</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_activities.map((activity, index) => (
+                  <tr key={activity.id} style={{ 
+                    borderBottom: index < stats!.recent_activities.length - 1 ? '1px solid #F5F6FA' : 'none'
+                  }}>
+                    <td style={{ padding: '16px 24px', fontWeight: 500, color: '#131523' }}>
+                      {activity.user_name}
+                    </td>
+                    <td style={{ padding: '16px 24px', color: '#5A607F' }}>
+                      {activity.item_name}
+                    </td>
+                    <td style={{ padding: '16px 24px', color: '#5A607F' }}>
+                      {new Date(activity.borrowed_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '16px 24px', color: '#5A607F' }}>
+                      {new Date(activity.expected_return_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <span style={{
+                        background: activity.status === 'returned' ? '#C4F8E2' : '#FFF2CC',
+                        color: activity.status === 'returned' ? '#06A561' : '#B7791F',
+                        borderRadius: 6,
+                        padding: '4px 12px',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        textTransform: 'capitalize'
+                      }}>
+                        {activity.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+};
+
+export default Dashboard; 

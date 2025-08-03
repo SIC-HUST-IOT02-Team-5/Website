@@ -14,6 +14,13 @@ cell_events_schema = CellEventSchema(many=True)
 # @jwt_required()
 
 
+# Lấy tất cả events
+@cell_event_bp.route('/cell-events', methods=['GET'])
+@jwt_required()
+def get_all_events():
+    events = CellEventService.get_all_events()
+    return jsonify(cell_events_schema.dump(events)), 200
+
 # Lấy log event theo cell
 @cell_event_bp.route('/cells/<int:cell_id>/events', methods=['GET'])
 @jwt_required()

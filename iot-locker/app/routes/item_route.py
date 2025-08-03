@@ -3,19 +3,17 @@ from flask import Blueprint, request, jsonify
 from app.services.item_service import ItemService
 from app.schemas.item_schema import ItemSchema
 from flask_jwt_extended import jwt_required
+from app.utils.token_helper import get_current_user, get_current_user_role, get_current_username
 
 item_bp = Blueprint('item', __name__)
 item_schema = ItemSchema()
 items_schema = ItemSchema(many=True)
 
-
-
 def get_user_role():
-    # Tạm thời lấy role từ request args, sau này thay bằng JWT/session
-    return request.args.get('role', 'user')
+    return get_current_user_role()
 
 def get_username():
-    return request.args.get('username', 'unknown')
+    return get_current_username()
 
 @item_bp.route('/items', methods=['POST'])
 @jwt_required()
