@@ -28,11 +28,6 @@ def borrow_item():
         return jsonify({"error": error}), 400
     return borrowing_schema.dump(borrowing), 201
 
-@borrowings_bp.route('/borrowings', methods=['GET'])
-@jwt_required()
-def get_all_borrowings():
-    borrowings = BorrowingsService.get_all_borrowings()
-    return borrowings_schema.dump(borrowings), 200
 
 @borrowings_bp.route('/borrowings/<int:borrowing_id>/return', methods=['PATCH'])
 @jwt_required()
