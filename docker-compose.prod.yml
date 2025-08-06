@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile.prod
+    command: gunicorn --bind 0.0.0.0:5000 --workers 4 main:app
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env.prod
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    volumes: []  # No volume mounts in production
+
+  frontend:
+    build:
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5000
+    restart: unless-stopped
+    volumes: []
+
+  db:
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backups:/backups

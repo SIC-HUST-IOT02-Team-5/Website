@@ -2,34 +2,30 @@ version: '3.9'
 
 services:
   backend:
-    build: 
+    build:
       context: ./iot-locker
-      dockerfile: Dockerfile.be
     container_name: iot_backend
-    command: python main.py
     volumes:
       - ./iot-locker:/app
-    ports:
-      - "5000:5000"
-    env_file:
-      - ./iot-locker/.env
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - iot_network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: iot_frontend
+    depends_on:
+      - backend
+    networks:
+      - iot_network
 
   db:
     image: mysql:8.0
     container_name: iot_mysql
-    restart: always
-    env_file:
-      - ./iot-locker/.env
-    ports:
-      - "3306:3306"
+    restart: unless-stopped
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -37,26 +33,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  adminer:
-    image: adminer
-    container_name: iot_adminer
-    restart: always
-    ports:
-      - "8080:8080"
-      
-  # Thêm frontend nếu có
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: iot_frontend
-  #   volumes:
-  #     - ./frontend:/app
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - backend
+    networks:
+      - iot_network
 
 volumes:
   db_data:
+
+networks:
+  iot_network:
+    driver: bridge
