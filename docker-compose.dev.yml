@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+    command: python main.py
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env.dev
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    volumes:
+      - ./iot-locker:/app
+      
+  frontend:
+    build:
+      dockerfile: Dockerfile.dev
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  db:
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env.dev
+
+  adminer:
+    image: adminer
+    container_name: iot_adminer_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - iot_network
