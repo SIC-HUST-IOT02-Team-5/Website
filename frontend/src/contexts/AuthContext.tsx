@@ -40,10 +40,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_data');
       }
     }
     setLoading(false);
+
+    // Listen for automatic logout events from API service
+    const handleAutoLogout = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth:logout', handleAutoLogout);
+
+    return () => {
+      window.removeEventListener('auth:logout', handleAutoLogout);
+    };
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -59,6 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('user_data', JSON.stringify(userData));
       setUser(userData);
     } catch (error) {
@@ -77,7 +90,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    // Call logout API to invalidate token on server (optional)
+    ApiService.logout().catch(() => {
+      // Ignore errors, just clean up locally
+    });
+    
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_data');
     setUser(null);
   };

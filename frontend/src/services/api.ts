@@ -59,6 +59,7 @@ export interface LoginResponse {
   role: string;
   full_name: string;
   access_token: string;
+  refresh_token: string;
 }
 
 export interface DashboardStats {
@@ -78,6 +79,12 @@ export interface DashboardStats {
 }
 
 class ApiService {
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value: any) => void;
+    reject: (error: any) => void;
+  }> = [];
+
   private getHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');
     return {
@@ -86,7 +93,79 @@ class ApiService {
     };
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async refreshToken(): Promise<string> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${refreshToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('access_token', data.access_token);
+    return data.access_token;
+  }
+
+  private processQueue(error: any, token: string | null = null) {
+    this.failedQueue.forEach(({ resolve, reject }) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(token);
+      }
+    });
+    
+    this.failedQueue = [];
+  }
+
+  private async handleResponse<T>(response: Response, originalRequest?: () => Promise<Response>): Promise<T> {
+    if (response.status === 401 && originalRequest) {
+      if (this.isRefreshing) {
+        // If we're already refreshing, queue this request
+        return new Promise<T>((resolve, reject) => {
+          this.failedQueue.push({ resolve, reject });
+        }).then(() => {
+          // Retry the original request with new token
+          return originalRequest().then(res => this.handleResponse<T>(res));
+        });
+      }
+
+      this.isRefreshing = true;
+
+      try {
+        await this.refreshToken();
+        this.processQueue(null, localStorage.getItem('access_token'));
+        this.isRefreshing = false;
+        
+        // Retry the original request with new token
+        const retryResponse = await originalRequest();
+        return this.handleResponse<T>(retryResponse);
+      } catch (error) {
+        this.processQueue(error, null);
+        this.isRefreshing = false;
+        
+        // Clear tokens and redirect to login
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_data');
+        
+        // Trigger logout in auth context
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Network error' }));
       throw new Error(errorData.error || `HTTP ${response.status}`);
@@ -117,19 +196,33 @@ class ApiService {
     return this.handleResponse<User>(response);
   }
 
-  // Users API
-  async getUsers(): Promise<User[]> {
-    const response = await fetch(`${API_BASE_URL}/users`, {
+  async logout(): Promise<void> {
+    const requestFunction = () => fetch(`${API_BASE_URL}/logout`, {
+      method: 'POST',
       headers: this.getHeaders()
     });
-    return this.handleResponse<User[]>(response);
+
+    const response = await requestFunction();
+    await this.handleResponse(response, requestFunction);
+  }
+
+  // Users API
+  async getUsers(): Promise<User[]> {
+    const requestFunction = () => fetch(`${API_BASE_URL}/users`, {
+      headers: this.getHeaders()
+    });
+
+    const response = await requestFunction();
+    return this.handleResponse<User[]>(response, requestFunction);
   }
 
   async getUser(id: number): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/users/${id}`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<User>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<User>(response, requestFunction);
   }
 
   async createUser(userData: {
@@ -138,44 +231,54 @@ class ApiService {
     full_name: string;
     role?: 'admin' | 'user';
   }): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users?role=admin`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/users?role=admin`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(userData)
     });
-    return this.handleResponse<User>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<User>(response, requestFunction);
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'PATCH',
       headers: this.getHeaders(),
       body: JSON.stringify(userData)
     });
-    return this.handleResponse<User>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<User>(response, requestFunction);
   }
 
   async deleteUser(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders()
     });
-    await this.handleResponse(response);
+
+    const response = await requestFunction();
+    await this.handleResponse(response, requestFunction);
   }
 
   // Items API
   async getItems(): Promise<Item[]> {
-    const response = await fetch(`${API_BASE_URL}/items`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/items`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Item[]>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Item[]>(response, requestFunction);
   }
 
   async getItem(id: number): Promise<Item> {
-    const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/items/${id}`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Item>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Item>(response, requestFunction);
   }
 
   async createItem(itemData: {
@@ -188,88 +291,109 @@ class ApiService {
       ...itemData,
       cell_id: parseInt(itemData.cell_id)
     };
-    const response = await fetch(`${API_BASE_URL}/items`, {
+    
+    const requestFunction = () => fetch(`${API_BASE_URL}/items`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(requestData)
     });
-    return this.handleResponse<Item>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Item>(response, requestFunction);
   }
 
   async updateItem(id: number, itemData: Partial<Item>): Promise<Item> {
-    const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/items/${id}`, {
       method: 'PATCH',
       headers: this.getHeaders(),
       body: JSON.stringify(itemData)
     });
-    return this.handleResponse<Item>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Item>(response, requestFunction);
   }
 
   async deleteItem(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/items/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders()
     });
-    await this.handleResponse(response);
+
+    const response = await requestFunction();
+    await this.handleResponse(response, requestFunction);
   }
 
   // Cells API
   async getCells(): Promise<Cell[]> {
-    const response = await fetch(`${API_BASE_URL}/cells`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cells`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Cell[]>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Cell[]>(response, requestFunction);
   }
 
   async getCell(id: number): Promise<Cell> {
-    const response = await fetch(`${API_BASE_URL}/cells/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cells/${id}`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Cell>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Cell>(response, requestFunction);
   }
 
   async createCell(cellData: {
     name: string;
     status?: string;
   }): Promise<Cell> {
-    const response = await fetch(`${API_BASE_URL}/cells`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cells`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(cellData)
     });
-    return this.handleResponse<Cell>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Cell>(response, requestFunction);
   }
 
   async updateCell(id: number, cellData: Partial<Cell>): Promise<Cell> {
-    const response = await fetch(`${API_BASE_URL}/cells/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cells/${id}`, {
       method: 'PATCH',
       headers: this.getHeaders(),
       body: JSON.stringify(cellData)
     });
-    return this.handleResponse<Cell>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Cell>(response, requestFunction);
   }
 
   async deleteCell(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/cells/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cells/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders()
     });
-    await this.handleResponse(response);
+
+    const response = await requestFunction();
+    await this.handleResponse(response, requestFunction);
   }
 
   // Borrowings API
   async getBorrowings(): Promise<Borrowing[]> {
-    const response = await fetch(`${API_BASE_URL}/borrowings`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/borrowings`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Borrowing[]>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Borrowing[]>(response, requestFunction);
   }
 
   async getBorrowing(id: number): Promise<Borrowing> {
-    const response = await fetch(`${API_BASE_URL}/borrowings/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/borrowings/${id}`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<Borrowing>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Borrowing>(response, requestFunction);
   }
 
   async createBorrowing(borrowingData: {
@@ -277,43 +401,53 @@ class ApiService {
     item_id: number;
     expected_return_at: string;
   }): Promise<Borrowing> {
-    const response = await fetch(`${API_BASE_URL}/borrowings`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/borrowings`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(borrowingData)
     });
-    return this.handleResponse<Borrowing>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Borrowing>(response, requestFunction);
   }
 
   async returnBorrowing(id: number): Promise<Borrowing> {
-    const response = await fetch(`${API_BASE_URL}/borrowings/${id}/return`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/borrowings/${id}/return`, {
       method: 'PATCH',
       headers: this.getHeaders()
     });
-    return this.handleResponse<Borrowing>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<Borrowing>(response, requestFunction);
   }
 
   // Cell Events API
   async getCellEvents(): Promise<CellEvent[]> {
-    const response = await fetch(`${API_BASE_URL}/cell-events`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cell-events`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<CellEvent[]>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<CellEvent[]>(response, requestFunction);
   }
 
   async getCellEvent(id: number): Promise<CellEvent> {
-    const response = await fetch(`${API_BASE_URL}/cell-events/${id}`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/cell-events/${id}`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<CellEvent>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<CellEvent>(response, requestFunction);
   }
 
   // Dashboard API
   async getDashboardStats(): Promise<DashboardStats> {
-    const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+    const requestFunction = () => fetch(`${API_BASE_URL}/dashboard/stats`, {
       headers: this.getHeaders()
     });
-    return this.handleResponse<DashboardStats>(response);
+
+    const response = await requestFunction();
+    return this.handleResponse<DashboardStats>(response, requestFunction);
   }
 }
 
