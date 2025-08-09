@@ -82,7 +82,8 @@ class CellService:
             return None
             
         # Gửi MQTT command để mở cell
-        success = mqtt_service.publish_command(cell_id, "open", {"user_id": user_id})
+        int_user_id = int(user_id) if user_id else None
+        success = mqtt_service.publish_command(cell_id, "open", {"user_id": int_user_id})
         if success:
             logger.info(f"MQTT open command sent to cell {cell_id} by user {user_id}")
             return True
