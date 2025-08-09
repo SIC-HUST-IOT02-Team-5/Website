@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.item_service import ItemService
 from app.schemas.item_schema import ItemSchema
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from app.utils.role_required import role_required
 from app.services.item_access_service import ItemAccessService
 from app.schemas.user_schema import UserSchema
@@ -73,10 +73,53 @@ def get_items_by_cell(cell_id):
 
 @item_bp.route('/items/<int:item_id>/access', methods=['GET'])
 @jwt_required()
-@role_required('admin')
 def get_item_access(item_id):
     users = ItemAccessService.list_users_for_item(item_id)
     return jsonify(users_schema.dump(users)), 200
+
+@item_bp.route('/items/<int:item_id>/access/check', methods=['GET'])
+@jwt_required()
+def check_item_access(item_id):
+    """Check if current user has access to item - for regular users"""
+    user_id_str = get_jwt_identity()
+    if not user_id_str:
+        return jsonify({'error': 'User ID not found in token'}), 401
+    try:
+        user_id = int(user_id_str)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid user ID in token'}), 401
+    
+    users = ItemAccessService.list_users_for_item(item_id)
+    # If no access restrictions, everyone can access
+    if not users:
+        return jsonify({'has_access': True}), 200
+    
+    # Check if user is in access list
+    has_access = any(user.id == user_id for user in users)
+    return jsonify({'has_access': has_access}), 200
+
+@item_bp.route('/items/my-accessible', methods=['GET'])
+@jwt_required()
+def get_my_accessible_items():
+    """Get all items current user has access to - for regular users"""
+    user_id_str = get_jwt_identity()
+    if not user_id_str:
+        return jsonify({'error': 'User ID not found in token'}), 401
+    try:
+        user_id = int(user_id_str)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid user ID in token'}), 401
+    
+    all_items = ItemService.get_all_items()
+    accessible_items = []
+    
+    for item in all_items:
+        users = ItemAccessService.list_users_for_item(item.id)
+        # If no access restrictions, everyone can access
+        if not users or any(user.id == user_id for user in users):
+            accessible_items.append(item)
+    
+    return jsonify(items_schema.dump(accessible_items)), 200
 
 @item_bp.route('/items/<int:item_id>/access', methods=['PUT'])
 @jwt_required()

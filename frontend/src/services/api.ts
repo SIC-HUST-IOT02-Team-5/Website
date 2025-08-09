@@ -187,6 +187,22 @@ class ApiService {
     return this.handleResponse<User[]>(response);
   }
 
+  // Get items current user has access to (for regular users)
+  async getMyAccessibleItems(): Promise<Item[]> {
+    const response = await fetch(`${API_BASE_URL}/items/my-accessible`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<Item[]>(response);
+  }
+
+  // Check if current user has access to specific item (for regular users)
+  async checkItemAccess(itemId: number): Promise<{ has_access: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access/check`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<{ has_access: boolean }>(response);
+  }
+
   async getItem(id: number): Promise<Item> {
     const response = await fetch(`${API_BASE_URL}/items/${id}`, {
       headers: this.getHeaders()
@@ -291,6 +307,13 @@ class ApiService {
   }
 
   // Borrowings API
+  async getMyActiveBorrowings(): Promise<Borrowing[]> {
+    const response = await fetch(`${API_BASE_URL}/borrowings/my-active`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<Borrowing[]>(response);
+  }
+
   async getBorrowings(): Promise<Borrowing[]> {
     const response = await fetch(`${API_BASE_URL}/borrowings`, {
       headers: this.getHeaders()

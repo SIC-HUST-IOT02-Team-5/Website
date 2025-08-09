@@ -2,9 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/api';
 import type { Item, Borrowing, Cell, User } from '../../services/api';
+import UserItemsView from './UserItemsView';
 
 const ItemsManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
+  
+  // If user role is 'user', show the simplified user view
+  if (currentUser?.role === 'user') {
+    return <UserItemsView />;
+  }
+  
+  // For admin users, show the full management interface
   const [items, setItems] = useState<Item[]>([]);
   const [cells, setCells] = useState<Cell[]>([]);
   const [borrowings, setBorrowings] = useState<Borrowing[]>([]);

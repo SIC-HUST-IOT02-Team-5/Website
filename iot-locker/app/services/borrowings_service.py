@@ -47,6 +47,17 @@ class BorrowingsService:
         ).all()
 
     @staticmethod
+    def get_active_borrowings_for_user(user_id: int):
+        """Return active (not yet returned) borrowings for a specific user."""
+        return BorrowingModel.query.options(
+            db.joinedload(BorrowingModel.user),
+            db.joinedload(BorrowingModel.item)
+        ).filter(
+            BorrowingModel.user_id == user_id,
+            BorrowingModel.status == BorrowStatus.borrowing
+        ).all()
+
+    @staticmethod
     def return_item(borrowing_id):
         borrowing = BorrowingModel.query.get(borrowing_id)
         if not borrowing or borrowing.status != BorrowStatus.borrowing:
