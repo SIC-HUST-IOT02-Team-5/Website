@@ -1,5 +1,5 @@
 # app/services/cell_service.py
-from app.models.cell_model import CellModel
+from app.models.cell_model import CellModel, CellStatus
 from app.services.cell_event_service import CellEventService
 from app.extensions import db
 from datetime import datetime
@@ -67,6 +67,48 @@ class CellService:
             logger.info(f"MQTT command sent: {command} to cell {cell_id}")
             
         return cell
+
+    @staticmethod
+    def open_cell(cell_id, user_id):
+        """Mở cell qua MQTT command"""
+        cell = CellModel.query.get(cell_id)
+        if not cell:
+            return None
+            
+        # Kiểm tra nếu cell đã mở rồi
+        current_status = cell.status.value if hasattr(cell.status, 'value') else cell.status
+        if current_status == "open":
+            return None
+            
+        # Gửi MQTT command để mở cell
+        success = mqtt_service.publish_command(cell_id, "open", {"user_id": user_id})
+        if success:
+            logger.info(f"MQTT open command sent to cell {cell_id} by user {user_id}")
+            return True
+        else:
+            logger.error(f"Failed to send MQTT open command to cell {cell_id}")
+            return False
+
+    @staticmethod
+    def close_cell(cell_id, user_id):
+        """Đóng cell qua MQTT command"""
+        cell = CellModel.query.get(cell_id)
+        if not cell:
+            return None
+            
+        # Kiểm tra nếu cell đã đóng rồi
+        current_status = cell.status.value if hasattr(cell.status, 'value') else cell.status
+        if current_status == "closed":
+            return None
+            
+        # Gửi MQTT command để đóng cell
+        success = mqtt_service.publish_command(cell_id, "close", {"user_id": user_id})
+        if success:
+            logger.info(f"MQTT close command sent to cell {cell_id} by user {user_id}")
+            return True
+        else:
+            logger.error(f"Failed to send MQTT close command to cell {cell_id}")
+            return False
 
     @staticmethod
     def delete_cell(cell_id):
