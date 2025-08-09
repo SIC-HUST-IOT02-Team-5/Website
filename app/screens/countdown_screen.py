@@ -12,11 +12,12 @@ from utils.config import Config
 from utils.api_client import APIClient
 import logging
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 
 class CountdownScreen(BaseScreen):
     """Countdown screen for monitoring action"""
     
-    def __init__(self, config: Config, user_data: dict = None, action_data: dict = None, parent=None):
+    def __init__(self, config: Config, user_data: Optional[Dict[str, Any]] = None, action_data: Optional[Dict[str, Any]] = None, parent=None):
         # Initialize data before calling super().__init__ to avoid AttributeError
         self.user_data = user_data or {}
         self.action_data = action_data or {}
@@ -37,18 +38,18 @@ class CountdownScreen(BaseScreen):
     def get_screen_title(self) -> str:
         action_type = self.action_data.get("action_type", "unknown")
         if action_type == "borrow":
-            return "Đang mượn thiết bị"
+            return "Borrowing Equipment"
         else:
-            return "Đang trả thiết bị"
+            return "Returning Equipment"
     
     def setup_countdown_content(self):
         """Setup countdown content"""
         # Main message
         action_type = self.action_data.get("action_type", "unknown")
         if action_type == "borrow":
-            message = "Tủ khóa đã mở - Vui lòng lấy thiết bị"
+            message = "Locker is open - Please take the equipment"
         else:
-            message = "Tủ khóa đã mở - Vui lòng đặt thiết bị vào"
+            message = "Locker is open - Please place the equipment inside"
         
         self.message_label = QLabel(message)
         message_font = QFont()
@@ -74,7 +75,7 @@ class CountdownScreen(BaseScreen):
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, self.countdown_time)
         self.progress_bar.setValue(self.countdown_time)
-        self.progress_bar.setFormat("Thời gian còn lại: %v giây")
+        self.progress_bar.setFormat("Time remaining: %v seconds")
         self.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 2px solid #ddd;
@@ -91,7 +92,7 @@ class CountdownScreen(BaseScreen):
         self.content_layout.addWidget(self.progress_bar)
         
         # Status message
-        self.status_label = QLabel("Tủ khóa đang mở - Thực hiện thao tác của bạn")
+        self.status_label = QLabel("Locker is open - Please perform your action")
         status_font = QFont()
         status_font.setPointSize(16)
         self.status_label.setFont(status_font)
@@ -121,7 +122,7 @@ class CountdownScreen(BaseScreen):
         info_layout.setSpacing(8)
         
         # Locker name
-        locker_name = locker.get("name", "Tủ khóa")
+        locker_name = locker.get("name", "Locker")
         name_label = QLabel(f"📍 {locker_name}")
         name_font = QFont()
         name_font.setPointSize(18)
@@ -131,7 +132,7 @@ class CountdownScreen(BaseScreen):
         
         # Compartment number
         compartment = locker.get("compartment", "N/A")
-        comp_label = QLabel(f"🔢 Ngăn số: {compartment}")
+        comp_label = QLabel(f"🔢 Compartment: {compartment}")
         comp_font = QFont()
         comp_font.setPointSize(16)
         comp_label.setFont(comp_font)
@@ -139,9 +140,9 @@ class CountdownScreen(BaseScreen):
         
         # Action type
         if action_type == "borrow":
-            action_text = "📦 Đang mượn thiết bị"
+            action_text = "📦 Borrowing Equipment"
         else:
-            action_text = "🔄 Đang trả thiết bị"
+            action_text = "🔄 Returning Equipment"
         
         action_label = QLabel(action_text)
         action_font = QFont()
@@ -202,7 +203,7 @@ class CountdownScreen(BaseScreen):
         buttons_layout.addWidget(self.complete_button)
         
         # Cancel button
-        self.cancel_button = QPushButton("❌ Hủy bỏ")
+        self.cancel_button = QPushButton("❌ Cancel")
         self.cancel_button.setMinimumHeight(60)
         self.cancel_button.clicked.connect(self.on_cancel)
         self.style_button(self.cancel_button, "#F44336")
@@ -311,7 +312,7 @@ class CountdownScreen(BaseScreen):
             }
         """)
         
-        self.status_label.setText("⏰ Hết thời gian! Tủ khóa sẽ tự động đóng")
+        self.status_label.setText("⏰ Time's up! Locker will close automatically")
         self.status_label.setStyleSheet("color: #F44336; font-weight: bold;")
         
         # Disable complete button
@@ -333,7 +334,7 @@ class CountdownScreen(BaseScreen):
             # Call API to check status
             response = self.api_client.get_locker_status(token, locker_id)
             
-            if response and response.get("success"):
+            if response and response.get("status"):
                 status = response.get("status")
                 if status == "closed":
                     # Locker was closed, complete action
@@ -382,12 +383,12 @@ class CountdownScreen(BaseScreen):
                 self.navigate_to.emit("done")
                 
             else:
-                error_msg = response.get("message", "Lỗi hoàn tất") if response else "Lỗi kết nối"
+                error_msg = response.get("message", "Completion error") if response else "Connection error"
                 self.show_error(f"❌ {error_msg}")
                 
         except Exception as e:
             self.logger.error(f"Error completing action: {e}")
-            self.show_error("❌ Lỗi hệ thống")
+            self.show_error("❌ System error")
     
     def auto_complete(self):
         """Auto-complete action when time expires"""
@@ -416,4 +417,4 @@ class CountdownScreen(BaseScreen):
         if hasattr(self, 'status_timer'):
             self.status_timer.stop()
         
-        super().closeEvent(event) 
+        super().closeEvent(event)

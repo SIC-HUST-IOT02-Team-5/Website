@@ -17,9 +17,11 @@ class LockerSelectScreen(BaseScreen):
     """Locker selection screen for borrow/return"""
     
     def __init__(self, config: Config, user_data: dict = None, action_type: str = "borrow", parent=None):
-        super().__init__(config, parent)
+        # Initialize data before calling super().__init__ to avoid AttributeError
         self.user_data = user_data or {}
         self.action_type = action_type  # "borrow" or "return"
+        
+        super().__init__(config, parent)
         self.api_client = APIClient(config)
         self.logger = logging.getLogger(__name__)
         self.lockers = []
@@ -30,17 +32,17 @@ class LockerSelectScreen(BaseScreen):
     
     def get_screen_title(self) -> str:
         if self.action_type == "borrow":
-            return "Chọn tủ khóa để mượn"
+            return "Select Locker to Borrow"
         else:
-            return "Chọn tủ khóa để trả"
+            return "Select Locker to Return"
     
     def setup_locker_content(self):
         """Setup locker selection content"""
         # Header message
         if self.action_type == "borrow":
-            message = "Chọn tủ khóa có thiết bị bạn muốn mượn"
+            message = "Choose a locker to open for borrowing"
         else:
-            message = "Chọn tủ khóa để trả thiết bị"
+            message = "Choose a locker you borrowed to return"
         
         self.message_label = QLabel(message)
         message_font = QFont()
@@ -118,42 +120,40 @@ class LockerSelectScreen(BaseScreen):
     def load_lockers(self):
         """Load lockers from API"""
         self.progress_bar.setVisible(True)
-        self.status_label.setText("Đang tải danh sách tủ khóa...")
+        self.status_label.setText("Loading locker list...")
         
         token = self.user_data.get("token")
         if not token:
-            self.show_error("❌ Không có token xác thực")
+            self.show_error("❌ No authentication token")
             return
         
         try:
-            if self.action_type == "borrow":
-                response = self.api_client.get_available_lockers(token)
-            else:
-                response = self.api_client.get_user_lockers(token)
-            
-            if response and response.get("success"):
-                self.lockers = response.get("lockers", [])
-                self.logger.info(f"Loaded {len(self.lockers)} lockers for {self.action_type}")
+            # Fetch all cells and display them (filtering can be added later)
+            response = self.api_client.get_cells(token)
+            if isinstance(response, list):
+                # Backend returns list directly
+                self.lockers = response
+                self.display_lockers()
+            elif response:
+                # Unknown shape
+                self.lockers = response.get("data") or response.get("cells") or []
                 self.display_lockers()
             else:
-                error_msg = response.get("message", "Lỗi tải danh sách") if response else "Lỗi kết nối"
-                self.show_error(f"❌ {error_msg}")
+                self.show_error("❌ Connection error")
                 
         except Exception as e:
             self.logger.error(f"Error loading lockers: {e}")
-            self.show_error("❌ Lỗi hệ thống")
+            self.show_error("❌ System error")
     
     def display_lockers(self):
         """Display lockers in grid layout"""
         self.progress_bar.setVisible(False)
         
         if not self.lockers:
-            self.status_label.setText("Không có tủ khóa nào khả dụng")
+            self.status_label.setText("No lockers available")
             return
-        
-        self.status_label.setText(f"Tìm thấy {len(self.lockers)} tủ khóa")
-        
-        # Clear existing lockers
+
+        self.status_label.setText(f"Found {len(self.lockers)} lockers")        # Clear existing lockers
         for i in reversed(range(self.lockers_layout.count())):
             widget = self.lockers_layout.itemAt(i).widget()
             if widget:
@@ -164,7 +164,6 @@ class LockerSelectScreen(BaseScreen):
         for i, locker in enumerate(self.lockers):
             row = i // cols
             col = i % cols
-            
             locker_widget = self.create_locker_widget(locker)
             self.lockers_layout.addWidget(locker_widget, row, col)
     
@@ -200,7 +199,7 @@ class LockerSelectScreen(BaseScreen):
         layout.addWidget(icon_label)
         
         # Locker name
-        name = locker.get("name", "Tủ khóa")
+        name = locker.get("name", f"Locker {locker.get('id', '')}")
         name_label = QLabel(name)
         name_font = QFont()
         name_font.setPointSize(14)
@@ -211,12 +210,9 @@ class LockerSelectScreen(BaseScreen):
         layout.addWidget(name_label)
         
         # Locker status/info
-        if self.action_type == "borrow":
-            status = f"Ngăn: {locker.get('compartment', 'N/A')}"
-        else:
-            status = f"Đã mượn: {locker.get('borrowed_date', 'N/A')}"
-        
-        status_label = QLabel(status)
+        status_val = locker.get("status")
+        status_text = status_val if isinstance(status_val, str) else getattr(status_val, 'value', None) or "unknown"
+        status_label = QLabel(f"Status: {status_text}")
         status_font = QFont()
         status_font.setPointSize(10)
         status_label.setFont(status_font)
@@ -257,7 +253,7 @@ class LockerSelectScreen(BaseScreen):
         }
         
         # Store in app manager if available
-        if hasattr(self, 'app_manager'):
+        if hasattr(self, 'app_manager') and self.app_manager:
             self.app_manager.store_locker_data(self.locker_data)
         
         # Navigate to confirmation screen
@@ -266,4 +262,4 @@ class LockerSelectScreen(BaseScreen):
     def show_error(self, message: str):
         """Show error message"""
         self.status_label.setText(message)
-        self.progress_bar.setVisible(False) 
+        self.progress_bar.setVisible(False)

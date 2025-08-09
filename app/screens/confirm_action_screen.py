@@ -29,18 +29,18 @@ class ConfirmActionScreen(BaseScreen):
     def get_screen_title(self) -> str:
         action_type = self.locker_data.get("action_type", "unknown")
         if action_type == "borrow":
-            return "Xác nhận mượn thiết bị"
+            return "Confirm Equipment Borrow"
         else:
-            return "Xác nhận trả thiết bị"
+            return "Confirm Equipment Return"
     
     def setup_confirm_content(self):
         """Setup confirmation content"""
         # Main message
         action_type = self.locker_data.get("action_type", "unknown")
         if action_type == "borrow":
-            message = "Xác nhận mượn thiết bị"
+            message = "Confirm Equipment Borrow"
         else:
-            message = "Xác nhận trả thiết bị"
+            message = "Confirm Equipment Return"
         
         self.message_label = QLabel(message)
         message_font = QFont()
@@ -79,7 +79,7 @@ class ConfirmActionScreen(BaseScreen):
         self.content_layout.addWidget(self.progress_bar)
         
         # Status message
-        self.status_label = QLabel("Vui lòng xác nhận hành động")
+        self.status_label = QLabel("Please confirm your action")
         status_font = QFont()
         status_font.setPointSize(16)
         self.status_label.setFont(status_font)
@@ -109,37 +109,21 @@ class ConfirmActionScreen(BaseScreen):
         info_layout.setSpacing(10)
         
         # Locker name
-        locker_name = locker.get("name", "Tủ khóa")
-        name_label = QLabel(f"Tủ khóa: {locker_name}")
+        locker_name = locker.get("name", "Locker")
+        name_label = QLabel(f"Locker: {locker_name}")
         name_font = QFont()
         name_font.setPointSize(18)
         name_font.setBold(True)
         name_label.setFont(name_font)
         info_layout.addWidget(name_label)
         
-        # Compartment number
-        compartment = locker.get("compartment", "N/A")
-        comp_label = QLabel(f"Số ngăn: {compartment}")
+        # ID
+        locker_id = locker.get("id", "N/A")
+        comp_label = QLabel(f"Mã tủ: {locker_id}")
         comp_font = QFont()
         comp_font.setPointSize(16)
         comp_label.setFont(comp_font)
         info_layout.addWidget(comp_label)
-        
-        # Device information
-        if action_type == "borrow":
-            device_name = locker.get("device_name", "Thiết bị")
-            device_label = QLabel(f"Thiết bị: {device_name}")
-            device_font = QFont()
-            device_font.setPointSize(16)
-            device_label.setFont(device_font)
-            info_layout.addWidget(device_label)
-        else:
-            borrowed_date = locker.get("borrowed_date", "N/A")
-            date_label = QLabel(f"Ngày mượn: {borrowed_date}")
-            date_font = QFont()
-            date_font.setPointSize(16)
-            date_label.setFont(date_font)
-            info_layout.addWidget(date_label)
         
         # Status
         status = locker.get("status", "Khả dụng")
@@ -157,7 +141,7 @@ class ConfirmActionScreen(BaseScreen):
         buttons_layout.setSpacing(20)
         
         # Cancel button
-        self.cancel_button = QPushButton("❌ Hủy bỏ")
+        self.cancel_button = QPushButton("❌ Cancel")
         self.cancel_button.setMinimumHeight(60)
         self.cancel_button.clicked.connect(self.on_cancel)
         self.style_button(self.cancel_button, "#F44336")
@@ -166,9 +150,9 @@ class ConfirmActionScreen(BaseScreen):
         # Confirm button
         action_type = self.locker_data.get("action_type", "unknown")
         if action_type == "borrow":
-            confirm_text = "🔓 Mở tủ mượn"
+            confirm_text = "🔓 Open Locker (Borrow)"
         else:
-            confirm_text = "🔓 Mở tủ trả"
+            confirm_text = "🔓 Open Locker (Return)"
         
         self.confirm_button = QPushButton(confirm_text)
         self.confirm_button.setMinimumHeight(60)
@@ -234,28 +218,25 @@ class ConfirmActionScreen(BaseScreen):
             # Call API to open locker
             response = self.api_client.open_locker(token, locker_id, action_type)
             
-            if response and response.get("success"):
-                # Locker opened successfully
-                self.logger.info(f"Locker {locker_id} opened for {action_type}")
+            if response is not None:
+                # Treat as success
+                self.logger.info(f"Locker {locker_id} open command sent for {action_type}")
                 
                 # Store action data for countdown screen
                 self.action_data = {
                     "locker": locker,
                     "action_type": action_type,
-                    "start_time": response.get("start_time"),
-                    "session_id": response.get("session_id")
                 }
                 
                 # Store in app manager if available
-                if hasattr(self, 'app_manager'):
+                if hasattr(self, 'app_manager') and self.app_manager:
                     self.app_manager.store_action_data(self.action_data)
                 
                 # Navigate to countdown screen
                 self.navigate_to.emit("countdown")
                 
             else:
-                error_msg = response.get("message", "Lỗi mở tủ") if response else "Lỗi kết nối"
-                self.show_error(f"❌ {error_msg}")
+                self.show_error("❌ Không thể gửi lệnh mở tủ")
                 
         except Exception as e:
             self.logger.error(f"Error opening locker: {e}")
@@ -272,4 +253,4 @@ class ConfirmActionScreen(BaseScreen):
     
     def on_cancel(self):
         """Handle cancel button click"""
-        self.go_back.emit() 
+        self.go_back.emit()

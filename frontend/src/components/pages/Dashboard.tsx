@@ -168,49 +168,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Cell Status Card */}
-      <div style={{
-        width: '100%',
-        maxWidth: 800,
-        background: '#fff',
-        borderRadius: 12,
-        boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
-        padding: '24px',
-        marginBottom: 32,
-      }}>
-        <h3 style={{
-          fontWeight: 700,
-          fontSize: 20,
-          color: '#131523',
-          marginBottom: 20,
-        }}>Cell Status</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16 }}>
-          {cells.map((cell) => (
-            <div key={cell.id} style={{
-              background: getCellColor(cell.status),
-              borderRadius: 8,
-              padding: '16px',
-              textAlign: 'center',
-              minHeight: 80,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              border: `1px solid ${getCellTextColor(cell.status)}20`,
-            }}>
-              <div style={{ fontWeight: 600, fontSize: 16, color: getCellTextColor(cell.status) }}>
-                {cell.name}
-              </div>
-              <div style={{ fontSize: 12, color: getCellTextColor(cell.status), marginTop: 4, textTransform: 'capitalize' }}>
-                {cell.status}
-              </div>
-              <div style={{ fontSize: 10, color: getCellTextColor(cell.status), marginTop: 2, opacity: 0.7 }}>
-                {cell.is_locked === 'locked' ? '🔒 Locked' : '🔓 Unlocked'}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Cell Control Panel */}
       <div style={{

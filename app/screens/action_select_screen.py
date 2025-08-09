@@ -26,13 +26,14 @@ class ActionSelectScreen(BaseScreen):
         self.clock_timer.start(1000)
     
     def get_screen_title(self) -> str:
-        return "Chọn hành động"
+        return "Select Action"
     
     def setup_action_content(self):
         """Setup action selection content"""
         # Welcome message with user name
-        user_name = self.user_data.get("user_info", {}).get("name", "Người dùng")
-        welcome_label = QLabel(f"Xin chào, {user_name}!")
+        user_info = self.user_data.get("user_info", {})
+        user_name = user_info.get("full_name") or user_info.get("username") or "User"
+        welcome_label = QLabel(f"Hello, {user_name}!")
         welcome_font = QFont()
         welcome_font.setPointSize(28)
         welcome_font.setBold(True)
@@ -41,7 +42,7 @@ class ActionSelectScreen(BaseScreen):
         self.content_layout.addWidget(welcome_label)
         
         # Subtitle
-        subtitle_label = QLabel("Bạn muốn thực hiện hành động gì?")
+        subtitle_label = QLabel("What would you like to do?")
         subtitle_font = QFont()
         subtitle_font.setPointSize(20)
         subtitle_label.setFont(subtitle_font)
@@ -66,30 +67,24 @@ class ActionSelectScreen(BaseScreen):
         buttons_layout.setSpacing(30)
         
         # Borrow button
-        self.borrow_button = QPushButton("📦 Mượn thiết bị")
+        self.borrow_button = QPushButton("📦 Borrow Device")
         self.borrow_button.setMinimumHeight(100)
         self.borrow_button.clicked.connect(self.on_borrow_clicked)
-        self.style_action_button(self.borrow_button, "#4CAF50", "Mượn thiết bị từ tủ khóa")
+        self.style_action_button(self.borrow_button, "#4CAF50", "Borrow device from locker")
         buttons_layout.addWidget(self.borrow_button)
         
         # Return button
-        self.return_button = QPushButton("🔄 Trả thiết bị")
+        self.return_button = QPushButton("🔄 Return Device")
         self.return_button.setMinimumHeight(100)
         self.return_button.clicked.connect(self.on_return_clicked)
-        self.style_action_button(self.return_button, "#2196F3", "Trả thiết bị vào tủ khóa")
+        self.style_action_button(self.return_button, "#2196F3", "Return device to locker")
         buttons_layout.addWidget(self.return_button)
         
         self.content_layout.addLayout(buttons_layout)
     
     def style_action_button(self, button: QPushButton, color: str, description: str):
         """Style action buttons with description"""
-        # Create container widget
-        container = QWidget()
-        container_layout = QVBoxLayout(container)
-        container_layout.setContentsMargins(0, 0, 0, 0)
-        container_layout.setSpacing(5)
-        
-        # Style the button
+        # Style the button directly without container to avoid layout issues
         button_font = QFont()
         button_font.setPointSize(22)
         button_font.setBold(True)
@@ -107,30 +102,14 @@ class ActionSelectScreen(BaseScreen):
             }}
             QPushButton:hover {{
                 background-color: {color}DD;
-                transform: scale(1.02);
             }}
             QPushButton:pressed {{
                 background-color: {color}AA;
             }}
         """)
         
-        container_layout.addWidget(button)
-        
-        # Add description
-        desc_label = QLabel(description)
-        desc_font = QFont()
-        desc_font.setPointSize(14)
-        desc_label.setFont(desc_font)
-        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        desc_label.setStyleSheet("color: #666;")
-        container_layout.addWidget(desc_label)
-        
-        # Replace button with container in parent layout
-        parent_layout = button.parent().layout()
-        if parent_layout:
-            index = parent_layout.indexOf(button)
-            parent_layout.removeWidget(button)
-            parent_layout.insertWidget(index, container)
+        # Set tooltip instead of complex layout
+        button.setToolTip(description)
     
     def setup_user_info(self):
         """Setup user information display"""
@@ -149,14 +128,14 @@ class ActionSelectScreen(BaseScreen):
         
         info_layout.addStretch()
         
-        # Department/role
-        department = user_info.get("department", "N/A")
-        dept_label = QLabel(f"Phòng ban: {department}")
-        dept_font = QFont()
-        dept_font.setPointSize(12)
-        dept_label.setFont(dept_font)
-        dept_label.setStyleSheet("color: #666;")
-        info_layout.addWidget(dept_label)
+        # Role
+        role = user_info.get("role", "N/A")
+        role_label = QLabel(f"Role: {role}")
+        role_font = QFont()
+        role_font.setPointSize(12)
+        role_label.setFont(role_font)
+        role_label.setStyleSheet("color: #666;")
+        info_layout.addWidget(role_label)
         
         self.content_layout.addLayout(info_layout)
     
@@ -170,8 +149,8 @@ class ActionSelectScreen(BaseScreen):
         self.logger.info("User selected return action")
         self.navigate_to.emit("locker_select_return")
     
-    def closeEvent(self, event):
+    def closeEvent(self, a0):
         """Handle close event"""
         if self.clock_timer:
             self.clock_timer.stop()
-        super().closeEvent(event) 
+        super().closeEvent(a0)

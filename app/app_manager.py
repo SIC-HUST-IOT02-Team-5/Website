@@ -7,8 +7,7 @@ Application Manager - Manages navigation between screens
 from PyQt6.QtWidgets import QStackedWidget, QWidget
 from PyQt6.QtCore import QObject, pyqtSignal
 from screens.welcome_screen import WelcomeScreen
-from screens.rfid_login_screen import RFIDLoginScreen
-from screens.code_login_screen import CodeLoginScreen
+from screens.user_login_screen import UserLoginScreen
 from screens.action_select_screen import ActionSelectScreen
 from screens.locker_select_screen import LockerSelectScreen
 from screens.confirm_action_screen import ConfirmActionScreen
@@ -48,15 +47,10 @@ class AppManager(QObject):
         self.welcome_screen.app_manager = self
         self.stacked_widget.addWidget(self.welcome_screen)
         
-        # RFID Login Screen (P1)
-        self.rfid_login_screen = RFIDLoginScreen(self.config)
-        self.rfid_login_screen.app_manager = self
-        self.stacked_widget.addWidget(self.rfid_login_screen)
-        
-        # Code Login Screen (P2)
-        self.code_login_screen = CodeLoginScreen(self.config)
-        self.code_login_screen.app_manager = self
-        self.stacked_widget.addWidget(self.code_login_screen)
+        # User/Password Login Screen (P1)
+        self.user_login_screen = UserLoginScreen(self.config)
+        self.user_login_screen.app_manager = self
+        self.stacked_widget.addWidget(self.user_login_screen)
         
         # Action Select Screen (P3)
         self.action_select_screen = ActionSelectScreen(self.config)
@@ -87,13 +81,9 @@ class AppManager(QObject):
         # Welcome Screen signals
         self.welcome_screen.navigate_to.connect(self.handle_navigation)
         
-        # RFID Login Screen signals
-        self.rfid_login_screen.navigate_to.connect(self.handle_navigation)
-        self.rfid_login_screen.go_back.connect(self.handle_go_back)
-        
-        # Code Login Screen signals
-        self.code_login_screen.navigate_to.connect(self.handle_navigation)
-        self.code_login_screen.go_back.connect(self.handle_go_back)
+        # User Login Screen signals
+        self.user_login_screen.navigate_to.connect(self.handle_navigation)
+        self.user_login_screen.go_back.connect(self.handle_go_back)
         
         # Action Select Screen signals
         self.action_select_screen.navigate_to.connect(self.handle_navigation)
@@ -116,10 +106,8 @@ class AppManager(QObject):
         
         if screen_name == "welcome":
             self.show_welcome_screen()
-        elif screen_name == "rfid_login":
-            self.show_rfid_login_screen()
-        elif screen_name == "code_login":
-            self.show_code_login_screen()
+        elif screen_name == "user_login":
+            self.show_user_login_screen()
         elif screen_name == "action_select":
             self.show_action_select_screen()
         elif screen_name == "locker_select_borrow":
@@ -141,9 +129,7 @@ class AppManager(QObject):
         current_widget = self.stacked_widget.currentWidget()
         
         # Determine previous screen based on current screen
-        if isinstance(current_widget, RFIDLoginScreen):
-            self.show_welcome_screen()
-        elif isinstance(current_widget, CodeLoginScreen):
+        if isinstance(current_widget, UserLoginScreen):
             self.show_welcome_screen()
         elif isinstance(current_widget, ActionSelectScreen):
             self.show_welcome_screen()
@@ -172,13 +158,9 @@ class AppManager(QObject):
         # Clear all data when returning to welcome
         self.clear_all_data()
     
-    def show_rfid_login_screen(self):
-        """Show RFID login screen"""
-        self.stacked_widget.setCurrentWidget(self.rfid_login_screen)
-    
-    def show_code_login_screen(self):
-        """Show code login screen"""
-        self.stacked_widget.setCurrentWidget(self.code_login_screen)
+    def show_user_login_screen(self):
+        """Show user/password login screen"""
+        self.stacked_widget.setCurrentWidget(self.user_login_screen)
     
     def show_action_select_screen(self):
         """Show action select screen"""
@@ -235,7 +217,9 @@ class AppManager(QObject):
     def store_user_data(self, user_data: dict):
         """Store user data from login"""
         self.user_data = user_data
-        self.logger.info(f"Stored user data for: {user_data.get('user_info', {}).get('name', 'Unknown')}")
+        # Adjust log to use full_name or username
+        name = user_data.get('user_info', {}).get('full_name') or user_data.get('user_info', {}).get('username', 'Unknown')
+        self.logger.info(f"Stored user data for: {name}")
     
     def store_locker_data(self, locker_data: dict):
         """Store locker data from selection"""
@@ -260,10 +244,10 @@ class AppManager(QObject):
         self.completion_data = {}
         self.logger.info("Cleared all stored data")
     
-    def get_current_widget(self) -> QWidget:
+    def get_current_widget(self):
         """Get current widget"""
         return self.stacked_widget.currentWidget()
     
     def get_stacked_widget(self) -> QStackedWidget:
         """Get the stacked widget"""
-        return self.stacked_widget 
+        return self.stacked_widget

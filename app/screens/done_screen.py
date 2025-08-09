@@ -24,7 +24,7 @@ class DoneScreen(BaseScreen):
         self.setup_auto_return_timer()
     
     def get_screen_title(self) -> str:
-        return "Hoàn tất"
+        return "Completed"
     
     def setup_done_content(self):
         """Setup done screen content"""
@@ -39,9 +39,9 @@ class DoneScreen(BaseScreen):
         # Success message
         action_type = self.completion_data.get("action_type", "unknown")
         if action_type == "borrow":
-            message = "Mượn thiết bị thành công!"
+            message = "Equipment borrowed successfully!"
         else:
-            message = "Trả thiết bị thành công!"
+            message = "Equipment returned successfully!"
         
         self.message_label = QLabel(message)
         message_font = QFont()
@@ -62,7 +62,7 @@ class DoneScreen(BaseScreen):
         self.content_layout.addStretch()
         
         # Auto return message
-        self.auto_return_label = QLabel("Tự động quay về màn hình chính sau 5 giây...")
+        self.auto_return_label = QLabel("Automatically returning to main screen in 5 seconds...")
         auto_return_font = QFont()
         auto_return_font.setPointSize(16)
         self.auto_return_label.setFont(auto_return_font)
@@ -104,8 +104,8 @@ class DoneScreen(BaseScreen):
         summary_layout.addWidget(summary_title)
         
         # Locker information
-        locker_name = locker.get("name", "Tủ khóa")
-        locker_label = QLabel(f"📍 Tủ khóa: {locker_name}")
+        locker_name = locker.get("name", "Locker")
+        locker_label = QLabel(f"📍 Locker: {locker_name}")
         self.style_summary_label(locker_label)
         summary_layout.addWidget(locker_label)
         
@@ -117,9 +117,9 @@ class DoneScreen(BaseScreen):
         
         # Action type
         if action_type == "borrow":
-            action_text = "📦 Hành động: Mượn thiết bị"
+            action_text = "📦 Action: Borrow Equipment"
         else:
-            action_text = "🔄 Hành động: Trả thiết bị"
+            action_text = "🔄 Action: Return Equipment"
         
         action_label = QLabel(action_text)
         self.style_summary_label(action_label)
@@ -130,7 +130,7 @@ class DoneScreen(BaseScreen):
             try:
                 dt = datetime.fromisoformat(completion_time.replace('Z', '+00:00'))
                 formatted_time = dt.strftime("%H:%M:%S - %d/%m/%Y")
-                time_label = QLabel(f"⏰ Thời gian: {formatted_time}")
+                time_label = QLabel(f"⏰ Time: {formatted_time}")
                 self.style_summary_label(time_label)
                 summary_layout.addWidget(time_label)
             except:
@@ -140,7 +140,7 @@ class DoneScreen(BaseScreen):
         if duration > 0:
             minutes = duration // 60
             seconds = duration % 60
-            duration_text = f"⏱️ Thời gian sử dụng: {minutes:02d}:{seconds:02d}"
+            duration_text = f"⏱️ Usage time: {minutes:02d}:{seconds:02d}"
             duration_label = QLabel(duration_text)
             self.style_summary_label(duration_label)
             summary_layout.addWidget(duration_label)
@@ -221,7 +221,7 @@ class DoneScreen(BaseScreen):
             self.countdown_timer.stop()
             self.auto_return_label.setText("Đang chuyển về trang chủ...")
         else:
-            self.auto_return_label.setText(f"Tự động quay về màn hình chính sau {self.countdown_seconds} giây...")
+            self.auto_return_label.setText(f"Automatically returning to main screen in {self.countdown_seconds} seconds...")
     
     def auto_return_to_home(self):
         """Auto return to home screen"""

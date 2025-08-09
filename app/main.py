@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
     
     def setup_window(self):
         """Setup main window"""
-        self.setWindowTitle("Hệ thống quản lý tủ khóa thông minh")
+        self.setWindowTitle("Smart Locker Management System")
         self.setWindowState(Qt.WindowState.WindowFullScreen)
         
         # Set window icon if available

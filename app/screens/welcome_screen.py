@@ -23,7 +23,7 @@ class WelcomeScreen(BaseScreen):
         self.clock_timer.start(1000)  # Update every second
     
     def get_screen_title(self) -> str:
-        return "Hệ thống quản lý tủ khóa thông minh"
+        return "Smart Locker Management System"
     
     def setup_welcome_content(self):
         """Setup welcome screen content"""
@@ -43,7 +43,7 @@ class WelcomeScreen(BaseScreen):
         self.content_layout.addLayout(logo_layout)
         
         # Welcome message
-        welcome_label = QLabel("Chào mừng bạn đến với hệ thống quản lý tủ khóa!")
+        welcome_label = QLabel("Welcome to the Smart Locker Management System!")
         welcome_font = QFont()
         welcome_font.setPointSize(20)
         welcome_font.setBold(True)
@@ -52,7 +52,7 @@ class WelcomeScreen(BaseScreen):
         self.content_layout.addWidget(welcome_label)
         
         # Subtitle
-        subtitle_label = QLabel("Vui lòng chọn phương thức đăng nhập")
+        subtitle_label = QLabel("Please login to continue")
         subtitle_font = QFont()
         subtitle_font.setPointSize(16)
         subtitle_label.setFont(subtitle_font)
@@ -69,7 +69,7 @@ class WelcomeScreen(BaseScreen):
         self.content_layout.addStretch()
         
         # Footer info
-        footer_info = QLabel("Hệ thống tự động - An toàn - Tiện lợi")
+        footer_info = QLabel("Automated - Secure - Convenient")
         footer_font = QFont()
         footer_font.setPointSize(12)
         footer_info.setFont(footer_font)
@@ -81,19 +81,12 @@ class WelcomeScreen(BaseScreen):
         buttons_layout = QVBoxLayout()
         buttons_layout.setSpacing(20)
         
-        # RFID Login Button
-        self.rfid_button = QPushButton("🔑 Đăng nhập bằng thẻ RFID")
-        self.rfid_button.setMinimumHeight(80)
-        self.rfid_button.clicked.connect(self.on_rfid_login)
-        self.style_button(self.rfid_button, "#4CAF50")
-        buttons_layout.addWidget(self.rfid_button)
-        
-        # Code Login Button
-        self.code_button = QPushButton("📝 Nhập mã truy cập")
-        self.code_button.setMinimumHeight(80)
-        self.code_button.clicked.connect(self.on_code_login)
-        self.style_button(self.code_button, "#2196F3")
-        buttons_layout.addWidget(self.code_button)
+        # Username/Password Login Button
+        self.user_button = QPushButton("👤 Account Login")
+        self.user_button.setMinimumHeight(80)
+        self.user_button.clicked.connect(self.on_user_login)
+        self.style_button(self.user_button, "#4CAF50")
+        buttons_layout.addWidget(self.user_button)
         
         self.content_layout.addLayout(buttons_layout)
     
@@ -122,16 +115,12 @@ class WelcomeScreen(BaseScreen):
             }}
         """)
     
-    def on_rfid_login(self):
-        """Handle RFID login button click"""
-        self.navigate_to.emit("rfid_login")
+    def on_user_login(self):
+        """Handle user/pass login button click"""
+        self.navigate_to.emit("user_login")
     
-    def on_code_login(self):
-        """Handle code login button click"""
-        self.navigate_to.emit("code_login")
-    
-    def closeEvent(self, event):
+    def closeEvent(self, a0):
         """Handle close event"""
         if self.clock_timer:
             self.clock_timer.stop()
-        super().closeEvent(event) 
+        super().closeEvent(a0)

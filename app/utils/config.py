@@ -19,7 +19,7 @@ class Config:
         """Load configuration from file or create default"""
         default_config = {
             "api": {
-                "base_url": "http://localhost:8000",
+                "base_url": "http://localhost:5000",
                 "timeout": 30,
                 "retry_attempts": 3
             },
@@ -31,7 +31,7 @@ class Config:
             "ui": {
                 "theme": "light",
                 "language": "vi",
-                "fullscreen": True,
+                "fullscreen": False,
                 "countdown_time": 300  # 5 minutes in seconds
             },
             "locker": {

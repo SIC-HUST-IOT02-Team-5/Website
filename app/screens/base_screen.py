@@ -19,6 +19,8 @@ class BaseScreen(QWidget):
     def __init__(self, config: Config, parent=None):
         super().__init__(parent)
         self.config = config
+        # Reference to app manager (set externally)
+        self.app_manager = None
         self.setup_ui()
         self.setup_styles()
     
@@ -68,7 +70,7 @@ class BaseScreen(QWidget):
         footer_layout = QHBoxLayout()
         
         # Back button
-        self.back_button = QPushButton("← Quay lại")
+        self.back_button = QPushButton("← Back")
         self.back_button.clicked.connect(self.on_back_clicked)
         footer_layout.addWidget(self.back_button)
         
@@ -76,7 +78,7 @@ class BaseScreen(QWidget):
         footer_layout.addStretch()
         
         # Home button
-        self.home_button = QPushButton("🏠 Trang chủ")
+        self.home_button = QPushButton("🏠 Home")
         self.home_button.clicked.connect(self.on_home_clicked)
         footer_layout.addWidget(self.home_button)
         
@@ -107,7 +109,7 @@ class BaseScreen(QWidget):
     
     def get_screen_title(self) -> str:
         """Get screen title - override in subclasses"""
-        return "Màn hình"
+        return "Screen"
     
     def update_clock(self):
         """Update clock display"""
@@ -136,4 +138,4 @@ class BaseScreen(QWidget):
         elif event.key() == Qt.Key.Key_Home:
             self.on_home_clicked()
         else:
-            super().keyPressEvent(event) 
+            super().keyPressEvent(event)

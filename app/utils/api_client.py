@@ -15,7 +15,7 @@ class APIClient:
     
     def __init__(self, config: Config):
         self.config = config
-        self.base_url = config.get("api.base_url", "http://localhost:8000")
+        self.base_url = config.get("api.base_url", "http://localhost:5000")
         self.timeout = config.get("api.timeout", 30)
         self.retry_attempts = config.get("api.retry_attempts", 3)
         self.session = requests.Session()
@@ -62,13 +62,13 @@ class APIClient:
     def login(self, username: str, password: str) -> Optional[Dict]:
         """Login and receive JWT token"""
         data = {"username": username, "password": password}
-        return self._make_request("POST", "/auth/login", data)
+        return self._make_request("POST", "/login", data) or self._make_request("POST", "/auth/login", data)
     
-    def register(self, username: str, password: str, email: str = None) -> Optional[Dict]:
+    def register(self, username: str, password: str, full_name: Optional[str] = None) -> Optional[Dict]:
         """Register first account (default admin)"""
         data = {"username": username, "password": password}
-        if email:
-            data["email"] = email
+        if full_name:
+            data["full_name"] = full_name
         return self._make_request("POST", "/auth/register", data)
     
     # User Management Endpoints (/users)
@@ -123,108 +123,35 @@ class APIClient:
         headers = {"Authorization": f"Bearer {token}"}
         return self._make_request("DELETE", f"/items/{item_id}", headers=headers)
     
-    def get_items_by_cell(self, token: str, cell_id: str) -> Optional[Dict]:
-        """Get items list in specific cell"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", f"/items/cell/{cell_id}", headers=headers)
-    
-    # Cell Management Endpoints (/cells)
+    # Cells
     def get_cells(self, token: str) -> Optional[Dict]:
-        """Get all cells list"""
         headers = {"Authorization": f"Bearer {token}"}
         return self._make_request("GET", "/cells", headers=headers)
     
     def get_cell(self, token: str, cell_id: str) -> Optional[Dict]:
-        """Get cell info by ID"""
         headers = {"Authorization": f"Bearer {token}"}
         return self._make_request("GET", f"/cells/{cell_id}", headers=headers)
     
-    def create_cell(self, token: str, cell_data: Dict) -> Optional[Dict]:
-        """Create new cell"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("POST", "/cells", cell_data, headers)
-    
-    def update_cell(self, token: str, cell_id: str, cell_data: Dict) -> Optional[Dict]:
-        """Update cell info"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("PATCH", f"/cells/{cell_id}", cell_data, headers)
-    
-    def delete_cell(self, token: str, cell_id: str) -> Optional[Dict]:
-        """Delete cell"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("DELETE", f"/cells/{cell_id}", headers=headers)
-    
-    # Borrowing Management Endpoints (/borrowings)
-    def create_borrowing(self, token: str, borrowing_data: Dict) -> Optional[Dict]:
-        """Create borrowing record"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("POST", "/borrowings", borrowing_data, headers)
-    
-    def return_item(self, token: str, borrowing_id: str) -> Optional[Dict]:
-        """Return item (complete borrowing)"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("PATCH", f"/borrowings/{borrowing_id}/return", headers=headers)
-    
-    # Cell Event Endpoints (/cells/<cell_id>/events)
-    def get_cell_events(self, token: str, cell_id: str) -> Optional[Dict]:
-        """Get cell events log (open/close)"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", f"/cells/{cell_id}/events", headers=headers)
-    
-    # Legacy methods for backward compatibility
-    def login_rfid(self, rfid_uid: str) -> Optional[Dict]:
-        """Login with RFID UID (legacy method)"""
-        # For now, we'll use the regular login endpoint
-        # In the future, this might be a separate RFID endpoint
-        data = {"rfid_uid": rfid_uid}
-        return self._make_request("POST", "/auth/rfid", data)
-    
-    def login_code(self, jwt_token: str) -> Optional[Dict]:
-        """Login with JWT token (legacy method)"""
-        # This might be used for token validation
-        headers = {"Authorization": f"Bearer {jwt_token}"}
-        return self._make_request("GET", "/auth/validate", headers=headers)
-    
-    def get_user_info(self, token: str) -> Optional[Dict]:
-        """Get user information (legacy method)"""
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", "/users/me", headers=headers)
-    
-    def get_available_lockers(self, token: str) -> Optional[Dict]:
-        """Get available lockers for borrowing (legacy method)"""
-        # This maps to available cells
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", "/cells/available", headers=headers)
-    
-    def get_user_lockers(self, token: str) -> Optional[Dict]:
-        """Get user's borrowed lockers (legacy method)"""
-        # This maps to user's active borrowings
-        headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", "/borrowings/active", headers=headers)
-    
+    # Borrow/Return actions via MQTT endpoints
     def open_locker(self, token: str, locker_id: str, action: str) -> Optional[Dict]:
-        """Open locker for borrow/return (legacy method)"""
-        # This maps to creating a borrowing or returning an item
+        headers = {"Authorization": f"Bearer {token}"}
         if action == "borrow":
-            # Create borrowing record
-            borrowing_data = {"cell_id": locker_id}
-            return self.create_borrowing(token, borrowing_data)
+            return self._make_request("POST", f"/cells/{locker_id}/open", {"action": "open"}, headers)
         else:
-            # Return item - we need to find the active borrowing first
-            # For now, we'll use a simplified approach
-            return self._make_request("POST", f"/cells/{locker_id}/open", 
-                                    {"action": action}, 
-                                    {"Authorization": f"Bearer {token}"})
+            return self._make_request("POST", f"/cells/{locker_id}/open", {"action": "open"}, headers)
     
     def confirm_action(self, token: str, locker_id: str, action: str) -> Optional[Dict]:
-        """Confirm borrow/return action (legacy method)"""
-        # This might be used for additional confirmation
-        data = {"cell_id": locker_id, "action": action}
+        # For now, simulate confirmation by calling close
         headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("POST", "/cells/confirm", data, headers)
+        return self._make_request("POST", f"/cells/{locker_id}/close", {"action": "close"}, headers)
     
     def get_locker_status(self, token: str, locker_id: str) -> Optional[Dict]:
-        """Get locker status (legacy method)"""
-        # This maps to cell status
+        # Map to GET /cells/<id>
         headers = {"Authorization": f"Bearer {token}"}
-        return self._make_request("GET", f"/cells/{locker_id}/status", headers=headers) 
+        data = self._make_request("GET", f"/cells/{locker_id}", headers=headers)
+        if not data:
+            return None
+        # Normalize
+        status_value = data.get("status") if isinstance(data.get("status"), str) else (data.get("status") or {})
+        status_str = status_value if isinstance(status_value, str) else status_value.get("value") if isinstance(status_value, dict) else None
+        return {"success": True, "status": status_str}
