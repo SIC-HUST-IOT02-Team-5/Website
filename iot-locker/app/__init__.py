@@ -19,6 +19,10 @@ def create_app():
     CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=float(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES_HOURS', 1)))
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES_DAYS', 30)))
+    
+    # Set timezone for Flask app
+    app.config['TIMEZONE'] = 'Asia/Ho_Chi_Minh'
+    
     JWTManager(app)
 
     # Initialize extensions

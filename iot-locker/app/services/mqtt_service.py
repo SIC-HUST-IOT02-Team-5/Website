@@ -7,6 +7,7 @@ from app.extensions import db
 from app.models.cell_model import CellModel, CellStatus
 from app.models.cell_event_model import CellEventModel, LockerEventType
 from datetime import datetime
+from app.utils.timezone_helper import get_vn_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +82,10 @@ class MQTTService:
                         cell.status = cell_status
                         
                         if new_status == 'open':
-                            cell.last_open_at = datetime.utcnow()
+                            cell.last_open_at = get_vn_utc_now()
                             event_type = LockerEventType.open
                         elif new_status == 'closed':
-                            cell.last_close_at = datetime.utcnow()
+                            cell.last_close_at = get_vn_utc_now()
                             event_type = LockerEventType.close
                         
                         # Ghi event với event_type là enum
@@ -92,7 +93,7 @@ class MQTTService:
                             locker_id=cell_id,
                             user_id=1,  # Hoặc None nếu không xác định được user
                             event_type=event_type,
-                            timestamp=datetime.utcnow()
+                            timestamp=get_vn_utc_now()
                         )
                         db.session.add(event)
                         db.session.commit()
@@ -133,7 +134,7 @@ class MQTTService:
         topic = f"locker/cell/{cell_id}/command"
         payload = {
             "action": command,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": get_vn_utc_now().isoformat(),
             **(data or {})
         }
         

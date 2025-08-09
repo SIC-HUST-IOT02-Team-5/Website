@@ -4,6 +4,7 @@ from app.services.cell_event_service import CellEventService
 from app.extensions import db
 from datetime import datetime
 from app.services.mqtt_service import mqtt_service
+from app.utils.timezone_helper import get_vn_utc_now
 import logging
 
 logger = logging.getLogger(__name__)
@@ -40,11 +41,11 @@ class CellService:
                 else:
                     value_lower = value.value
                 if value_lower == "open":
-                    cell.last_open_at = datetime.utcnow()
+                    cell.last_open_at = get_vn_utc_now()
                     status_changed = True
                     new_status = "open"
                 elif value_lower == "closed":
-                    cell.last_close_at = datetime.utcnow()
+                    cell.last_close_at = get_vn_utc_now()
                     status_changed = True
                     new_status = "close"
                 setattr(cell, key, value)

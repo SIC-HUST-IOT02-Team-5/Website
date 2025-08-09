@@ -3,6 +3,7 @@ from app.models.borrowings_model import BorrowingModel, BorrowStatus
 from app.models.item_model import ItemModel, ItemStatus
 from app.models.user_model import UserModel
 from datetime import datetime
+from app.utils.timezone_helper import get_vn_utc_now
 
 class BorrowingsService:
     @staticmethod
@@ -42,17 +43,13 @@ class BorrowingsService:
         borrowing = BorrowingModel.query.get(borrowing_id)
         if not borrowing or borrowing.status != BorrowStatus.borrowing:
             return None, {"error": "Borrowing not found or already returned"}
-        borrowing.returned_at = datetime.utcnow()
+        borrowing.returned_at = get_vn_utc_now()
         borrowing.status = BorrowStatus.returned
         item = ItemModel.query.get(borrowing.item_id)
         if item:
             item.status = ItemStatus.available
         db.session.commit()
         return borrowing, None
-        
-    @staticmethod
-    def get_all_borrowings():
-        return BorrowingModel.query.all()
         
     @staticmethod
     def get_borrowing(borrowing_id):

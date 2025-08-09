@@ -1,6 +1,7 @@
 from app.extensions import db
 import enum
 from sqlalchemy import func
+from app.utils.timezone_helper import vn_func_now
 
 class LockerEventType(enum.Enum):
     open = "open"
@@ -13,10 +14,8 @@ class CellEventModel(db.Model):
     locker_id = db.Column(db.Integer, db.ForeignKey('cells.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     event_type = db.Column(db.Enum(LockerEventType), nullable=False)
-    timestamp = db.Column(db.DateTime, server_default=func.now(), nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=vn_func_now(), nullable=False)
 
     # Relationships
     user = db.relationship('UserModel', backref='cell_events')
     cell = db.relationship('CellModel', backref='events')
-
-

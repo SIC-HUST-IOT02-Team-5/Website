@@ -1,6 +1,7 @@
 from app.extensions import db
 import enum
 from sqlalchemy import func, Enum
+from app.utils.timezone_helper import vn_func_now
 
 from app.models.cell_model import CellModel
 
@@ -17,7 +18,7 @@ class ItemModel(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=True)
     status = db.Column(db.Enum(ItemStatus), nullable=False, default=ItemStatus.available)
-    created_at = db.Column(db.DateTime, server_default=func.now())
-    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+    created_at = db.Column(db.DateTime, server_default=vn_func_now())
+    updated_at = db.Column(db.DateTime, server_default=vn_func_now(), onupdate=vn_func_now())
 
     cell = db.relationship(CellModel, backref='items')
