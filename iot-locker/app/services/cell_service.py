@@ -3,6 +3,10 @@ from app.models.cell_model import CellModel
 from app.services.cell_event_service import CellEventService
 from app.extensions import db
 from datetime import datetime
+from app.services.mqtt_service import mqtt_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CellService:
     @staticmethod
@@ -47,6 +51,7 @@ class CellService:
             else:
                 setattr(cell, key, value)
         db.session.commit()
+        
         # Ghi event nếu status đổi và có user_id
         if status_changed and user_id:
             CellEventService.create_event(
@@ -54,6 +59,13 @@ class CellService:
                 user_id=user_id,
                 event_type=new_status
             )
+            
+        # Gửi MQTT command khi thay đổi status qua API
+        if status_changed:
+            command = "open" if new_status == "open" else "close"
+            mqtt_service.publish_command(cell_id, command, {"user_id": user_id})
+            logger.info(f"MQTT command sent: {command} to cell {cell_id}")
+            
         return cell
 
     @staticmethod

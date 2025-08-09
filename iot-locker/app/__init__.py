@@ -29,6 +29,8 @@ def create_app():
     with app.app_context():
         try:
             from app.services.mqtt_service import mqtt_service
+            # Store app instance in mqtt_service for context
+            mqtt_service.app = app
             mqtt_service.connect()
         except Exception as e:
             app.logger.error(f"Failed to initialize MQTT service: {e}")
