@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Locker MQTT Monitor</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .message {
+            background: #f8f9fa;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .publish-section {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        .messages-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 IoT Locker MQTT Monitor</h1>
+    
+    <div class="container">
+        <h2>📡 Connection</h2>
+        <div id="status" class="status disconnected">Disconnected</div>
+        <div class="controls">
+            <input type="text" id="brokerUrl" value="ws://localhost:9001" placeholder="Broker URL">
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📥 Subscribe & Monitor</h2>
+        <div class="controls">
+            <input type="text" id="subscribeTopics" value="locker/+/+/+" placeholder="Topics to subscribe">
+            <button onclick="subscribe()">Subscribe</button>
+            <button onclick="clearMessages()">Clear Messages</button>
+        </div>
+        <div class="messages-container" id="messages"></div>
+    </div>
+
+    <div class="container publish-section">
+        <h2>📤 Publish Test Messages</h2>
+        
+        <h3>Quick Commands</h3>
+        <div class="controls">
+            <select id="cellId">
+                <option value="1">Cell 1</option>
+                <option value="2">Cell 2</option>
+                <option value="3">Cell 3</option>
+                <option value="4">Cell 4</option>
+            </select>
+            <button onclick="sendOpenCommand()">🔓 Send OPEN Command</button>
+            <button onclick="sendCloseCommand()">🔒 Send CLOSE Command</button>
+        </div>
+        
+        <div class="controls">
+            <button onclick="simulateStatus('open')">📡 Simulate Status: OPEN</button>
+            <button onclick="simulateStatus('closed')">📡 Simulate Status: CLOSED</button>
+            <button onclick="simulateEvent('opened')">📝 Simulate Event: OPENED</button>
+        </div>
+
+        <h3>Custom Message</h3>
+        <div class="controls">
+            <input type="text" id="publishTopic" value="locker/cell/1/command" placeholder="Topic">
+        </div>
+        <div class="controls">
+            <textarea id="publishMessage" rows="3" style="width: 100%; resize: vertical;" placeholder='{"action": "open", "user_id": 1}'></textarea>
+        </div>
+        <div class="controls">
+            <button onclick="publishMessage()">Publish Message</button>
+        </div>
+    </div>
+
+    <script>
+        let client = null;
+        let connected = false;
+
+        function updateStatus(isConnected, message = '') {
+            const statusElement = document.getElementById('status');
+            if (isConnected) {
+                statusElement.className = 'status connected';
+                statusElement.textContent = `Connected ${message}`;
+                connected = true;
+            } else {
+                statusElement.className = 'status disconnected';
+                statusElement.textContent = `Disconnected ${message}`;
+                connected = false;
+            }
+        }
+
+        function connect() {
+            const brokerUrl = document.getElementById('brokerUrl').value;
+            
+            try {
+                client = mqtt.connect(brokerUrl);
+                
+                client.on('connect', function () {
+                    updateStatus(true, 'to ' + brokerUrl);
+                    addMessage('🟢 Connected to MQTT broker', 'system');
+                    
+                    // Auto subscribe to all locker topics
+                    const topics = document.getElementById('subscribeTopics').value;
+                    if (topics) {
+                        subscribe();
+                    }
+                });
+
+                client.on('message', function (topic, message) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    let messageText;
+                    
+                    try {
+                        const parsed = JSON.parse(message.toString());
+                        messageText = JSON.stringify(parsed, null, 2);
+                    } catch {
+                        messageText = message.toString();
+                    }
+                    
+                    addMessage(`📨 [${timestamp}] ${topic}:\n${messageText}`, 'message');
+                });
+
+                client.on('error', function (error) {
+                    updateStatus(false, '- Error: ' + error);
+                    addMessage('❌ Connection error: ' + error, 'error');
+                });
+
+                client.on('close', function () {
+                    updateStatus(false);
+                    addMessage('🔴 Connection closed', 'system');
+                });
+
+            } catch (error) {
+                updateStatus(false, '- Error: ' + error);
+                addMessage('❌ Failed to connect: ' + error, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (client) {
+                client.end();
+                updateStatus(false);
+                addMessage('🔴 Disconnected by user', 'system');
+            }
+        }
+
+        function subscribe() {
+            if (!connected) {
+                alert('Please connect first');
+                return;
+            }
+
+            const topics = document.getElementById('subscribeTopics').value;
+            client.subscribe(topics, function (err) {
+                if (!err) {
+                    addMessage(`📥 Subscribed to: ${topics}`, 'system');
+                } else {
+                    addMessage(`❌ Subscribe error: ${err}`, 'error');
+                }
+            });
+        }
+
+        function publishMessage() {
+            if (!connected) {
+                alert('Please connect first');
+                return;
+            }
+
+            const topic = document.getElementById('publishTopic').value;
+            const message = document.getElementById('publishMessage').value;
+
+            client.publish(topic, message, function (err) {
+                if (!err) {
+                    addMessage(`📤 Published to ${topic}: ${message}`, 'sent');
+                } else {
+                    addMessage(`❌ Publish error: ${err}`, 'error');
+                }
+            });
+        }
+
+        function sendOpenCommand() {
+            const cellId = document.getElementById('cellId').value;
+            const topic = `locker/cell/${cellId}/command`;
+            const message = JSON.stringify({
+                action: "open",
+                user_id: 1,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('publishTopic').value = topic;
+            document.getElementById('publishMessage').value = message;
+            publishMessage();
+        }
+
+        function sendCloseCommand() {
+            const cellId = document.getElementById('cellId').value;
+            const topic = `locker/cell/${cellId}/command`;
+            const message = JSON.stringify({
+                action: "close",
+                user_id: 1,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('publishTopic').value = topic;
+            document.getElementById('publishMessage').value = message;
+            publishMessage();
+        }
+
+        function simulateStatus(status) {
+            const cellId = document.getElementById('cellId').value;
+            const topic = `locker/cell/${cellId}/status`;
+            const message = JSON.stringify({
+                status: status,
+                hall_sensor: status === 'open' ? 1 : 0,
+                relay: status === 'open' ? 1 : 0,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('publishTopic').value = topic;
+            document.getElementById('publishMessage').value = message;
+            publishMessage();
+        }
+
+        function simulateEvent(eventType) {
+            const cellId = document.getElementById('cellId').value;
+            const topic = `locker/cell/${cellId}/event`;
+            const message = JSON.stringify({
+                event_type: eventType,
+                user_id: 1,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('publishTopic').value = topic;
+            document.getElementById('publishMessage').value = message;
+            publishMessage();
+        }
+
+        function addMessage(text, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        // Auto-connect when page loads
+        window.onload = function() {
+            addMessage('🚀 MQTT Monitor loaded. Click Connect to start.', 'system');
+        };
+    </script>
+</body>
+</html>

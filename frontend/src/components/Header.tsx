@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import MQTTStatus from './MQTTStatus'
 import styles from './MainLayout.module.css'
 
 const Header: React.FC = () => {
@@ -20,6 +21,7 @@ const Header: React.FC = () => {
     >
       <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>Smart Storage by SSIOT02 - Team 5</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <MQTTStatus />
         <div style={{ fontSize: 14 }}>
           Welcome, {user?.full_name} ({user?.role})
         </div>

@@ -25,6 +25,14 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Initialize MQTT service
+    with app.app_context():
+        try:
+            from app.services.mqtt_service import mqtt_service
+            mqtt_service.connect()
+        except Exception as e:
+            app.logger.error(f"Failed to initialize MQTT service: {e}")
+
     # Register blueprints
     app.register_blueprint(user_bp)
     app.register_blueprint(cell_bp)

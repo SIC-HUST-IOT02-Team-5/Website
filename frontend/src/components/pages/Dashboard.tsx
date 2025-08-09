@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../../services/api';
 import type { DashboardStats, Cell } from '../../services/api';
+import CellControl from '../CellControl';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -209,6 +210,14 @@ const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Cell Control Panel */}
+      <div style={{
+        width: '100%',
+        marginBottom: 40,
+      }}>
+        <CellControl compact={true} />
       </div>
 
       {/* Recent Activities Table */}

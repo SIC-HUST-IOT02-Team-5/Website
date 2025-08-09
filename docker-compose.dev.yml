@@ -2,22 +2,19 @@ version: '3.9'
 
 services:
   backend:
-    build:
-      dockerfile: Dockerfile
-    command: python main.py
+    container_name: iot_backend_dev
     ports:
       - "5000:5000"
     env_file:
-      - .env.dev
+      - .env.dev  # Override env file cho dev
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-    volumes:
-      - ./iot-locker:/app
-      
+
   frontend:
     build:
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.dev  # Override dockerfile cho dev
+    container_name: iot_frontend_dev
     command: npm run dev -- --host 0.0.0.0
     ports:
       - "5173:5173"
@@ -28,11 +25,18 @@ services:
       - /app/node_modules
 
   db:
+    container_name: iot_mysql_dev
     ports:
-      - "3306:3306"
+      - "3306:3306"  # Expose port cho dev
     env_file:
-      - .env.dev
+      - .env.dev  # Override env file cho dev
+    volumes:
+      - db_data_dev:/var/lib/mysql  # Separate volume cho dev
 
+  mosquitto:
+    container_name: mosquitto_dev
+
+  # Service chỉ có trong dev
   adminer:
     image: adminer
     container_name: iot_adminer_dev
@@ -41,3 +45,17 @@ services:
       - "8080:8080"
     networks:
       - iot_network
+
+  # MQTT Web Client GUI
+  mqtt-web-client:
+    image: hivemq/hivemq4
+    container_name: mqtt_web_client_dev
+    ports:
+      - "8000:8000"  # Web Interface
+    environment:
+      - HIVEMQ_ALLOW_ALL_CLIENTS=true
+    networks:
+      - iot_network
+
+volumes:
+  db_data_dev:
