@@ -4,8 +4,8 @@ import logging
 from typing import Dict, Any, Optional
 import paho.mqtt.client as mqtt
 from app.extensions import db
-from app.models.cell_model import CellModel
-from app.models.cell_event_model import CellEventModel
+from app.models.cell_model import CellModel, CellStatus
+from app.models.cell_event_model import CellEventModel, LockerEventType
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 class MQTTService:
     def __init__(self):
         self.client = None
-        self.broker_host = os.getenv('MQTT_BROKER_HOST', 'mosquitto')
+        self.app = None  # Store Flask app instance
+        self.broker_host = os.getenv('MQTT_BROKER_HOST', 'localhost')
         self.broker_port = int(os.getenv('MQTT_BROKER_PORT', 1883))
         self.username = os.getenv('MQTT_USERNAME', '')
         self.password = os.getenv('MQTT_PASSWORD', '')
@@ -64,51 +65,53 @@ class MQTTService:
                 self.handle_cell_event(cell_id, payload)
     
     def handle_cell_status(self, cell_id: int, payload: Dict[str, Any]):
-        """Xử lý cập nhật trạng thái cell từ ESP32"""
+        """Khi nhận status từ ESP32 (hoặc mqtt-monitor.html), cập nhật trạng thái cell trong DB và ghi log event"""
         try:
-            with db.session.begin():
-                cell = CellModel.query.get(cell_id)
-                if not cell:
-                    logger.warning(f"Cell {cell_id} not found in database")
-                    return
-                
-                # Cập nhật trạng thái cell từ sensor
-                new_status = payload.get('status')  # 'open' hoặc 'closed'
-                if new_status and new_status != cell.status.value:
-                    cell.status = new_status
-                    
-                    # Cập nhật timestamp
-                    if new_status == 'open':
-                        cell.last_open_at = datetime.utcnow()
-                    elif new_status == 'closed':
-                        cell.last_close_at = datetime.utcnow()
-                    
-                    logger.info(f"Updated cell {cell_id} status to {new_status}")
-                
-                db.session.commit()
-                
+            if self.app:
+                with self.app.app_context():
+                    cell = CellModel.query.get(cell_id)
+                    if not cell:
+                        logger.warning(f"Cell {cell_id} not found in database")
+                        return
+                    new_status = payload.get('status')  # 'open' hoặc 'closed'
+                    current_status = cell.status.value if hasattr(cell.status, 'value') else cell.status
+                    if new_status and new_status != current_status:
+                        # Chuyển đổi string sang enum
+                        cell_status = CellStatus.open if new_status == 'open' else CellStatus.closed
+                        cell.status = cell_status
+                        
+                        if new_status == 'open':
+                            cell.last_open_at = datetime.utcnow()
+                            event_type = LockerEventType.open
+                        elif new_status == 'closed':
+                            cell.last_close_at = datetime.utcnow()
+                            event_type = LockerEventType.close
+                        
+                        # Ghi event với event_type là enum
+                        event = CellEventModel(
+                            locker_id=cell_id,
+                            user_id=1,  # Hoặc None nếu không xác định được user
+                            event_type=event_type,
+                            timestamp=datetime.utcnow()
+                        )
+                        db.session.add(event)
+                        db.session.commit()
+                        logger.info(f"Updated cell {cell_id} status to {new_status} from MQTT")
+                    else:
+                        logger.info(f"Received status for cell {cell_id} but no change: {new_status}")
         except Exception as e:
-            logger.error(f"Error updating cell {cell_id} status: {e}")
-            db.session.rollback()
+            logger.error(f"Error handling status message: {e}")
+            if self.app:
+                with self.app.app_context():
+                    db.session.rollback()
     
     def handle_cell_event(self, cell_id: int, payload: Dict[str, Any]):
-        """Xử lý ghi log sự kiện cell"""
+        """Log khi nhận event từ ESP32 - chỉ ghi log"""
         try:
-            with db.session.begin():
-                event = CellEventModel(
-                    cell_id=cell_id,
-                    event_type=payload.get('event_type', 'unknown'),
-                    user_id=payload.get('user_id'),
-                    timestamp=datetime.utcnow()
-                )
-                db.session.add(event)
-                db.session.commit()
-                
-                logger.info(f"Logged event for cell {cell_id}: {payload.get('event_type')}")
-                
+            logger.info(f"Received event from ESP32 cell {cell_id}: {payload}")
+            # Chỉ ghi log, không cập nhật database
         except Exception as e:
-            logger.error(f"Error logging cell {cell_id} event: {e}")
-            db.session.rollback()
+            logger.error(f"Error handling event message: {e}")
     
     def subscribe_topics(self):
         """Subscribe các topic cần thiết"""

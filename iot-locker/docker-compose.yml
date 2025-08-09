@@ -3,31 +3,34 @@ version: '3.9'
 services:
   backend:
     build: 
-      context: ./iot-locker
-      dockerfile: Dockerfile.be
+      context: .
+      dockerfile: Dockerfile
     container_name: iot_backend
     command: python main.py
     volumes:
-      - ./iot-locker:/app
+      - .:/app
     ports:
       - "5000:5000"
     env_file:
-      - ./iot-locker/.env
+      - ./.env
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MQTT_BROKER_HOST=mosquitto
     depends_on:
       db:
         condition: service_healthy
+      mosquitto:
+        condition: service_started
 
   db:
     image: mysql:8.0
     container_name: iot_mysql
     restart: always
     env_file:
-      - ./iot-locker/.env
+      - ./.env
     ports:
       - "3306:3306"
     volumes:
@@ -37,6 +40,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: iot_mosquitto
+    restart: always
+    ports:
+      - "1883:1883"    # MQTT port
+      - "9001:9001"    # WebSocket port
+    volumes:
+      - ../mosquitto/config:/mosquitto/config
+      - ../mosquitto/data:/mosquitto/data
+      - ../mosquitto/log:/mosquitto/log
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
 
   adminer:
     image: adminer
