@@ -1,12 +1,11 @@
 from marshmallow import Schema, fields, validates, ValidationError
 from marshmallow_enum import EnumField
-from app.models.cell_model import CellStatus, CellisLocked
+from app.models.cell_model import CellStatus
 
 class CellSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
     status = EnumField(CellStatus, by_value=True, default = CellStatus.closed)
-    is_locked = EnumField(CellisLocked, by_value=True, default = CellisLocked.locked)
 
     last_open_at = fields.DateTime(dump_only=True)
     last_close_at = fields.DateTime(dump_only=True)

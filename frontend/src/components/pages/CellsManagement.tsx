@@ -142,16 +142,7 @@ const CellsManagement = () => {
     };
   };
 
-  const getLockInfo = (isLocked: string) => {
-    const locked = isLocked === 'locked';
-    return {
-      bg: locked ? 'linear-gradient(135deg, #FEF3C7, #FDE68A)' : 'linear-gradient(135deg, #DBEAFE, #BFDBFE)',
-      borderColor: locked ? '#F59E0B' : '#3B82F6',
-      textColor: locked ? '#92400E' : '#1E40AF',
-      text: locked ? 'LOCKED' : 'UNLOCKED',
-      icon: locked ? '🔐' : '🔓'
-    };
-  };
+  // Removed lock/unlock UI
 
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return 'Never';
@@ -340,7 +331,7 @@ const CellsManagement = () => {
       }}>
         {cells.map((cell) => {
           const statusInfo = getStatusInfo(cell.status);
-          const lockInfo = getLockInfo(cell.is_locked);
+          // lock/unlock removed
           
           return (
             <div key={cell.id} style={{
@@ -429,20 +420,7 @@ const CellsManagement = () => {
                       {statusInfo.icon} {statusInfo.text}
                     </div>
                     
-                    <div style={{
-                      background: lockInfo.bg,
-                      border: `2px solid ${lockInfo.borderColor}`,
-                      color: lockInfo.textColor,
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                      {lockInfo.icon} {lockInfo.text}
-                    </div>
+                    {/* lock/unlock badge removed */}
                   </div>
                 </div>
               </div>

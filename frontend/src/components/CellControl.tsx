@@ -94,15 +94,7 @@ const CellControl = ({ compact = false, showTitle = true }: CellControlProps) =>
     };
   };
 
-  const getLockBadge = (isLocked: string) => {
-    const locked = isLocked === 'locked';
-    return {
-      bg: locked ? '#FEF3C7' : '#D1FAE5',
-      color: locked ? '#92400E' : '#065F46',
-      text: locked ? 'LOCKED' : 'UNLOCKED',
-      icon: locked ? '🔐' : '🔓'
-    };
-  };
+  // lock/unlock removed
 
   if (loading) {
     return (
@@ -197,7 +189,6 @@ const CellControl = ({ compact = false, showTitle = true }: CellControlProps) =>
         }}>
           {cells.map((cell) => {
             const statusBadge = getStatusBadge(cell.status);
-            const lockBadge = getLockBadge(cell.is_locked);
             
             return (
               <div key={cell.id} style={{
@@ -244,19 +235,7 @@ const CellControl = ({ compact = false, showTitle = true }: CellControlProps) =>
                       {statusBadge.text}
                     </span>
                     
-                    <span style={{
-                      background: lockBadge.bg,
-                      color: lockBadge.color,
-                      padding: '4px 12px',
-                      borderRadius: '20px',
-                      fontSize: '11px',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      {lockBadge.icon} {lockBadge.text}
-                    </span>
+                    {/* lock badge removed */}
                   </div>
                 </div>
 
@@ -412,7 +391,6 @@ const CellControl = ({ compact = false, showTitle = true }: CellControlProps) =>
         }}>
           {cells.map((cell) => {
             const statusBadge = getStatusBadge(cell.status);
-            const lockBadge = getLockBadge(cell.is_locked);
             
             return (
               <div key={cell.id} style={{
@@ -477,19 +455,7 @@ const CellControl = ({ compact = false, showTitle = true }: CellControlProps) =>
                         {statusBadge.text}
                       </span>
                       
-                      <span style={{
-                        background: lockBadge.bg,
-                        color: lockBadge.color,
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        {lockBadge.icon} {lockBadge.text}
-                      </span>
+                      {/* lock badge removed */}
                     </div>
                   </div>
                 </div>

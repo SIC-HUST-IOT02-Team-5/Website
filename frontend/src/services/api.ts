@@ -23,7 +23,6 @@ export interface Cell {
   id: number;
   name: string;
   status: 'open' | 'closed';
-  is_locked: 'locked' | 'unlocked';
   last_open_at?: string;
   last_close_at?: string;
   created_at: string;
@@ -169,6 +168,23 @@ class ApiService {
       headers: this.getHeaders()
     });
     return this.handleResponse<Item[]>(response);
+  }
+
+  // Item Access API (admin only)
+  async getItemAccess(itemId: number): Promise<User[]> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<User[]>(response);
+  }
+
+  async setItemAccess(itemId: number, userIds: number[]): Promise<User[]> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ user_ids: userIds })
+    });
+    return this.handleResponse<User[]>(response);
   }
 
   async getItem(id: number): Promise<Item> {
