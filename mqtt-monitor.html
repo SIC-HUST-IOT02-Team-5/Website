@@ -115,7 +115,7 @@
             <input type="text" id="publishTopic" value="locker/cell/1/command" placeholder="Topic">
         </div>
         <div class="controls">
-            <textarea id="publishMessage" rows="3" style="width: 100%; resize: vertical;" placeholder='{"action": "open", "user_id": 1}'></textarea>
+            <textarea id="publishMessage" rows="3" style="width: 100%; resize: vertical;" placeholder='{"action": "open", "user_id": "1"}'></textarea>
         </div>
         <div class="controls">
             <button onclick="publishMessage()">Publish Message</button>
@@ -233,7 +233,7 @@
             const topic = `locker/cell/${cellId}/command`;
             const message = JSON.stringify({
                 action: "open",
-                user_id: 1,
+                user_id: "1",
                 timestamp: new Date().toISOString()
             });
 
@@ -247,7 +247,7 @@
             const topic = `locker/cell/${cellId}/command`;
             const message = JSON.stringify({
                 action: "close",
-                user_id: 1,
+                user_id: "1",
                 timestamp: new Date().toISOString()
             });
 
@@ -276,7 +276,7 @@
             const topic = `locker/cell/${cellId}/event`;
             const message = JSON.stringify({
                 event_type: eventType,
-                user_id: 1,
+                user_id: "1",
                 timestamp: new Date().toISOString()
             });
 
