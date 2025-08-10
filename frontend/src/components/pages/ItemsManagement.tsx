@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/api';
-import type { Item, Borrowing, Cell } from '../../services/api';
+import type { Item, Borrowing, Cell, User } from '../../services/api';
+import UserItemsView from './UserItemsView';
 
 const ItemsManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
+  
+  // If user role is 'user', show the simplified user view
+  if (currentUser?.role === 'user') {
+    return <UserItemsView />;
+  }
+  
+  // For admin users, show the full management interface
   const [items, setItems] = useState<Item[]>([]);
   const [cells, setCells] = useState<Cell[]>([]);
   const [borrowings, setBorrowings] = useState<Borrowing[]>([]);
@@ -14,6 +22,9 @@ const ItemsManagement: React.FC = () => {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [accessUsers, setAccessUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<'items' | 'cells'>('items');
   const [showCreateCellModal, setShowCreateCellModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,6 +41,9 @@ const ItemsManagement: React.FC = () => {
     user_id: '',
     expected_return_at: ''
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cellFilter, setCellFilter] = useState<'all' | number>('all');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -38,14 +52,17 @@ const ItemsManagement: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [itemsData, borrowingsData, cellsData] = await Promise.all([
+      const [itemsData, borrowingsData, cellsData, usersData] = await Promise.all([
         ApiService.getItems(),
         ApiService.getBorrowings(),
-        ApiService.getCells()
+        ApiService.getCells(),
+        ApiService.getUsers()
       ]);
       setItems(itemsData);
       setBorrowings(borrowingsData);
       setCells(cellsData);
+      setAllUsers(usersData);
+  setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
     } finally {
@@ -148,6 +165,39 @@ const ItemsManagement: React.FC = () => {
     setShowBorrowModal(true);
   };
 
+  const openAccessModal = async (item: Item) => {
+    try {
+      setSelectedItem(item);
+      const users = await ApiService.getItemAccess(item.id);
+      setAccessUsers(users);
+      setShowAccessModal(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load access list');
+    }
+  };
+
+  const toggleUserAccess = (userId: number) => {
+    const exists = accessUsers.some((u: User) => u.id === userId);
+    if (exists) {
+      setAccessUsers((prev: User[]) => prev.filter((u: User) => u.id !== userId));
+    } else {
+      const user = allUsers.find((u: User) => u.id === userId);
+      if (user) setAccessUsers((prev: User[]) => [...prev, user]);
+    }
+  };
+
+  const saveAccess = async () => {
+    if (!selectedItem) return;
+    try {
+  const userIds = accessUsers.map((u: User) => u.id);
+      await ApiService.setItemAccess(selectedItem.id, userIds);
+      setShowAccessModal(false);
+      setSelectedItem(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save access');
+    }
+  };
+
   const handleCreateCell = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -168,13 +218,13 @@ const ItemsManagement: React.FC = () => {
   };
 
   const getCellItems = (cellId: number) => {
-    return items.filter(item => item.cell_id === cellId);
+    return items.filter((item: Item) => item.cell_id === cellId);
   };
 
   const getCellBorrowedItems = (cellId: number) => {
     const cellItems = getCellItems(cellId);
-    return cellItems.filter(item => {
-      const activeBorrowing = borrowings.find(b => b.item_id === item.id && !b.returned_at);
+    return cellItems.filter((item: Item) => {
+      const activeBorrowing = borrowings.find((b: Borrowing) => b.item_id === item.id && !b.returned_at);
       return activeBorrowing !== undefined;
     });
   };
@@ -189,6 +239,13 @@ const ItemsManagement: React.FC = () => {
   };
 
   const isAdmin = currentUser?.role === 'admin';
+
+  // Derived list based on search and cell filter
+  const filteredItems = items.filter((item: Item) => {
+    const matchesQuery = `${item.name} ${item.description}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCell = cellFilter === 'all' ? true : item.cell_id === cellFilter;
+    return matchesQuery && matchesCell;
+  });
 
   if (loading) {
     return (
@@ -276,10 +333,41 @@ const ItemsManagement: React.FC = () => {
 
       {/* Tab Content */}
       {activeTab === 'items' && (
-        <>
-          {/* Add Item Button */}
-          {isAdmin && (
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              style={{ padding: '10px 12px', border: '1px solid #E6E9F4', borderRadius: 8, minWidth: 220 }}
+            />
+            <select
+              value={cellFilter === 'all' ? 'all' : String(cellFilter)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCellFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              style={{ padding: '10px 12px', border: '1px solid #E6E9F4', borderRadius: 8 }}
+            >
+              <option value="all">All Cells</option>
+              {cells.map((c: Cell) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            {lastUpdated && (
+              <span style={{ color: '#5A607F', fontSize: 12 }}>Updated {lastUpdated.toLocaleTimeString()}</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ background: '#F5F6FA', border: '1px solid #E6E9F4', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>Total: <strong>{filteredItems.length}</strong></div>
+            <div style={{ background: '#C4F8E2', color: '#06A561', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>Available: <strong>{filteredItems.filter((i: Item) => i.status === 'available').length}</strong></div>
+            <div style={{ background: '#FFF2CC', color: '#B7791F', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>Borrowed: <strong>{filteredItems.filter((i: Item) => i.status === 'borrowed').length}</strong></div>
+            <div style={{ background: '#FFE8E8', color: '#D63031', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>Maintenance: <strong>{filteredItems.filter((i: Item) => i.status === 'maintenance').length}</strong></div>
+            <button
+              onClick={fetchData}
+              style={{
+                background: '#E6E9F4', color: '#5A607F', border: 'none', borderRadius: 6, padding: '10px 14px', fontWeight: 600, cursor: 'pointer'
+              }}
+            >Refresh</button>
+            {isAdmin && (
               <button 
                 onClick={() => setShowCreateModal(true)}
                 style={{
@@ -287,16 +375,16 @@ const ItemsManagement: React.FC = () => {
                   color: '#fff',
                   border: 'none',
                   borderRadius: 6,
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
                 + Add Item
               </button>
-            </div>
-          )}
-        </>
+            )}
+          </div>
+        </div>
       )}
 
       {activeTab === 'cells' && (
@@ -361,7 +449,7 @@ const ItemsManagement: React.FC = () => {
           color: '#131523', 
           padding: '24px 24px 0 24px' 
         }}>
-          All Items ({items.length})
+          All Items ({filteredItems.length})
         </div>
         <div style={{ width: '100%', overflowX: 'auto' }}>
           <table style={{ 
@@ -370,7 +458,7 @@ const ItemsManagement: React.FC = () => {
             borderCollapse: 'collapse', 
             marginTop: 16 
           }}>
-            <thead>
+            <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
               <tr style={{ 
                 color: '#5A607F', 
                 fontWeight: 500, 
@@ -387,13 +475,13 @@ const ItemsManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => {
+              {filteredItems.map((item: Item, index: number) => {
                 const statusStyle = getStatusColor(item.status);
-                const activeBorrowing = borrowings.find(b => b.item_id === item.id && !b.returned_at);
+                const activeBorrowing = borrowings.find((b: Borrowing) => b.item_id === item.id && !b.returned_at);
                 
                 return (
                   <tr key={item.id} style={{ 
-                    borderBottom: index < items.length - 1 ? '1px solid #F5F6FA' : 'none'
+                    borderBottom: index < filteredItems.length - 1 ? '1px solid #F5F6FA' : 'none'
                   }}>
                     <td style={{ padding: '16px 24px', color: '#5A607F' }}>{item.id}</td>
                     <td style={{ padding: '16px 24px', fontWeight: 500, color: '#131523' }}>
@@ -403,7 +491,7 @@ const ItemsManagement: React.FC = () => {
                       {item.description}
                     </td>
                     <td style={{ padding: '16px 24px', color: '#5A607F' }}>
-                      {cells.find(cell => cell.id === item.cell_id)?.name || `Cell ${item.cell_id}`}
+                      {cells.find((cell: Cell) => cell.id === item.cell_id)?.name || `Cell ${item.cell_id}`}
                     </td>
                     <td style={{ padding: '16px 24px' }}>
                       <span style={{ 
@@ -454,6 +542,21 @@ const ItemsManagement: React.FC = () => {
                               }}
                             >
                               Delete
+                            </button>
+                            <button
+                              onClick={() => openAccessModal(item)}
+                              style={{
+                                background: '#E6F7FF',
+                                color: '#096DD9',
+                                border: 'none',
+                                borderRadius: 4,
+                                padding: '6px 12px',
+                                fontSize: 12,
+                                fontWeight: 500,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Manage Access
                             </button>
                           </>
                         )}
@@ -1003,6 +1106,63 @@ const ItemsManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Access Modal */}
+      {showAccessModal && selectedItem && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: '1.5rem', width: '90%', maxWidth: 600 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 12 }}>Manage Access: {selectedItem.name}</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <h3 style={{ margin: '8px 0' }}>All Users</h3>
+                <div style={{ maxHeight: 300, overflow: 'auto', border: '1px solid #eee', borderRadius: 8 }}>
+                  {allUsers.map(u => (
+                    <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}>
+                      <input
+                        type="checkbox"
+                        checked={accessUsers.some(au => au.id === u.id)}
+                        onChange={() => toggleUserAccess(u.id)}
+                      />
+                      <span>{u.full_name} ({u.username})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 style={{ margin: '8px 0' }}>Can Access</h3>
+                <div style={{ maxHeight: 300, overflow: 'auto', border: '1px solid #eee', borderRadius: 8 }}>
+                  {accessUsers.length === 0 && (
+                    <div style={{ padding: 12, color: '#999' }}>No users selected</div>
+                  )}
+                  {accessUsers.map(u => (
+                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}>
+                      <span>{u.full_name} ({u.username})</span>
+                      <button onClick={() => toggleUserAccess(u.id)} style={{ background: 'transparent', border: 'none', color: '#d63031', cursor: 'pointer' }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+              <button
+                onClick={() => { setShowAccessModal(false); setSelectedItem(null); }}
+                style={{ background: '#E6E9F4', color: '#5A607F', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveAccess}
+                style={{ background: '#52c41a', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       )}

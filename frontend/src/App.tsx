@@ -7,6 +7,7 @@ import UsersManagement from './components/pages/UsersManagement'
 import Categories from './components/pages/Categories'
 import CellsManagement from './components/pages/CellsManagement'
 import ActionsLog from './components/pages/ActionsLog'
+import KioskView from './components/pages/KioskView'
 import './App.css'
 
 function AppContent() {
@@ -46,7 +47,13 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AppContent />
+        <Routes>
+          {/* Kiosk route - independent of authentication */}
+          <Route path="/kiosk" element={<KioskView />} />
+          
+          {/* Main application routes */}
+          <Route path="/*" element={<AppContent />} />
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   )

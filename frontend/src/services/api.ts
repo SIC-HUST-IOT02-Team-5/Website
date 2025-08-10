@@ -23,7 +23,6 @@ export interface Cell {
   id: number;
   name: string;
   status: 'open' | 'closed';
-  is_locked: 'locked' | 'unlocked';
   last_open_at?: string;
   last_close_at?: string;
   created_at: string;
@@ -171,6 +170,39 @@ class ApiService {
     return this.handleResponse<Item[]>(response);
   }
 
+  // Item Access API (admin only)
+  async getItemAccess(itemId: number): Promise<User[]> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<User[]>(response);
+  }
+
+  async setItemAccess(itemId: number, userIds: number[]): Promise<User[]> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ user_ids: userIds })
+    });
+    return this.handleResponse<User[]>(response);
+  }
+
+  // Get items current user has access to (for regular users)
+  async getMyAccessibleItems(): Promise<Item[]> {
+    const response = await fetch(`${API_BASE_URL}/items/my-accessible`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<Item[]>(response);
+  }
+
+  // Check if current user has access to specific item (for regular users)
+  async checkItemAccess(itemId: number): Promise<{ has_access: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/items/${itemId}/access/check`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<{ has_access: boolean }>(response);
+  }
+
   async getItem(id: number): Promise<Item> {
     const response = await fetch(`${API_BASE_URL}/items/${id}`, {
       headers: this.getHeaders()
@@ -275,6 +307,13 @@ class ApiService {
   }
 
   // Borrowings API
+  async getMyActiveBorrowings(): Promise<Borrowing[]> {
+    const response = await fetch(`${API_BASE_URL}/borrowings/my-active`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse<Borrowing[]>(response);
+  }
+
   async getBorrowings(): Promise<Borrowing[]> {
     const response = await fetch(`${API_BASE_URL}/borrowings`, {
       headers: this.getHeaders()

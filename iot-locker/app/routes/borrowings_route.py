@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.schemas.borrowings_schema import BorrowingSchema
 from app.services.borrowings_service import BorrowingsService
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from app.utils.role_required import role_required
 
 borrowings_bp = Blueprint('borrowings_bp', __name__)
@@ -12,8 +12,11 @@ borrowings_schema = BorrowingSchema(many=True)
 @jwt_required()
 def borrow_item():
     data = request.get_json()
-    claims = get_jwt()
-    user_id = claims.get('sub')  # Get user_id from JWT claims
+    user_id_str = get_jwt_identity()  # JWT identity is user id as string
+    try:
+        user_id = int(user_id_str) if user_id_str is not None else None
+    except (TypeError, ValueError):
+        user_id = None
     
     errors = borrowing_schema.validate(data)
     if errors:
@@ -42,6 +45,19 @@ def return_item(borrowing_id):
 @role_required('admin')
 def get_all_borrowings():
     borrowings = BorrowingsService.get_all_borrowings()
+    return jsonify(borrowings_schema.dump(borrowings)), 200
+
+@borrowings_bp.route('/borrowings/my-active', methods=['GET'])
+@jwt_required()
+def get_my_active_borrowings():
+    user_id_str = get_jwt_identity()
+    if not user_id_str:
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        user_id = int(user_id_str)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Unauthorized"}), 401
+    borrowings = BorrowingsService.get_active_borrowings_for_user(user_id)
     return jsonify(borrowings_schema.dump(borrowings)), 200
 
 @borrowings_bp.route('/borrowings/<int:borrowing_id>', methods=['GET'])
