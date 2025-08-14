@@ -1,6 +1,7 @@
 from app.extensions import db
 from sqlalchemy import func
 import enum
+from app.utils.timezone_helper import vn_func_now
 
 class BorrowStatus(enum.Enum):
     borrowing = "borrowing"
@@ -13,13 +14,13 @@ class BorrowingModel(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    borrowed_at = db.Column(db.DateTime, server_default=func.now(), nullable=False)
+    borrowed_at = db.Column(db.DateTime, server_default=vn_func_now(), nullable=False)
     expected_return_at = db.Column(db.DateTime, nullable=False)
     returned_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.Enum(BorrowStatus), nullable=False, default=BorrowStatus.borrowing)
     note = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, server_default=func.now())
-    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+    created_at = db.Column(db.DateTime, server_default=vn_func_now())
+    updated_at = db.Column(db.DateTime, server_default=vn_func_now(), onupdate=vn_func_now())
 
     # Relationships
     user = db.relationship('UserModel', backref='borrowings')

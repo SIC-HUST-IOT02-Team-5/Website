@@ -6,6 +6,7 @@ const navItems = [
   { label: 'Dashboard', icon: '📊', path: '/' },
   { label: 'Users Management', icon: '👤', path: '/users' },
   { label: 'Items & Cells Management', icon: '📦', path: '/categories' },
+  { label: 'Cell Control', icon: '🔐', path: '/cells' },
   { label: 'Actions Log', icon: '📝', path: '/actions' },
 ]
 

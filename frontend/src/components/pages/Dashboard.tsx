@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../../services/api';
 import type { DashboardStats, Cell } from '../../services/api';
+import CellControl from '../CellControl';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -203,12 +204,18 @@ const Dashboard: React.FC = () => {
               <div style={{ fontSize: 12, color: getCellTextColor(cell.status), marginTop: 4, textTransform: 'capitalize' }}>
                 {cell.status}
               </div>
-              <div style={{ fontSize: 10, color: getCellTextColor(cell.status), marginTop: 2, opacity: 0.7 }}>
-                {cell.is_locked === 'locked' ? '🔒 Locked' : '🔓 Unlocked'}
-              </div>
+              {/* lock status removed */}
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Cell Control Panel */}
+      <div style={{
+        width: '100%',
+        marginBottom: 40,
+      }}>
+        <CellControl compact={true} />
       </div>
 
       {/* Recent Activities Table */}

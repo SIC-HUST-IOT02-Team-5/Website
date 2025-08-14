@@ -50,7 +50,7 @@ const ActionsLog: React.FC = () => {
           action: `Cell ${event.event_type}`,
           user: event.user?.full_name || 'System',
           timestamp: event.timestamp,
-          details: `Cell ${event.cell.cell_number}`,
+          details: `Cell ${event.cell.name}`,
           status: 'completed'
         });
       });
@@ -64,7 +64,7 @@ const ActionsLog: React.FC = () => {
           action: borrowing.returned_at ? 'Item Returned' : 'Item Borrowed',
           user: borrowing.user?.full_name || `User ${borrowing.user_id}`,
           timestamp: borrowing.returned_at || borrowing.borrowed_at,
-          details: `${borrowing.item?.name || 'Unknown Item'} (Cell ${borrowing.cell?.cell_number || borrowing.item?.cell_id || 'Unknown'})`,
+          details: `${borrowing.item?.name || 'Unknown Item'} (Cell ${borrowing.cell?.name || borrowing.item?.cell_id || 'Unknown'})`,
           status: borrowing.returned_at ? 'returned' : 'active'
         });
       });

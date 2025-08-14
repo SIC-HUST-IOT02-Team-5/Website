@@ -1,8 +1,13 @@
 # app/services/cell_service.py
-from app.models.cell_model import CellModel
+from app.models.cell_model import CellModel, CellStatus
 from app.services.cell_event_service import CellEventService
 from app.extensions import db
 from datetime import datetime
+from app.services.mqtt_service import mqtt_service
+from app.utils.timezone_helper import get_vn_utc_now
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CellService:
     @staticmethod
@@ -36,17 +41,18 @@ class CellService:
                 else:
                     value_lower = value.value
                 if value_lower == "open":
-                    cell.last_open_at = datetime.utcnow()
+                    cell.last_open_at = get_vn_utc_now()
                     status_changed = True
                     new_status = "open"
                 elif value_lower == "closed":
-                    cell.last_close_at = datetime.utcnow()
+                    cell.last_close_at = get_vn_utc_now()
                     status_changed = True
                     new_status = "close"
                 setattr(cell, key, value)
             else:
                 setattr(cell, key, value)
         db.session.commit()
+        
         # Ghi event nếu status đổi và có user_id
         if status_changed and user_id:
             CellEventService.create_event(
@@ -54,7 +60,57 @@ class CellService:
                 user_id=user_id,
                 event_type=new_status
             )
+            
+        # Gửi MQTT command khi thay đổi status qua API
+        if status_changed:
+            command = "open" if new_status == "open" else "close"
+            mqtt_service.publish_command(cell_id, command, {"user_id": user_id})
+            logger.info(f"MQTT command sent: {command} to cell {cell_id}")
+            
         return cell
+
+    @staticmethod
+    def open_cell(cell_id, user_id):
+        """Mở cell qua MQTT command"""
+        cell = CellModel.query.get(cell_id)
+        if not cell:
+            return None
+            
+        # Kiểm tra nếu cell đã mở rồi
+        current_status = cell.status.value if hasattr(cell.status, 'value') else cell.status
+        if current_status == "open":
+            return None
+            
+        # Gửi MQTT command để mở cell
+        int_user_id = int(user_id) if user_id else None
+        success = mqtt_service.publish_command(cell_id, "open", {"user_id": int_user_id})
+        if success:
+            logger.info(f"MQTT open command sent to cell {cell_id} by user {user_id}")
+            return True
+        else:
+            logger.error(f"Failed to send MQTT open command to cell {cell_id}")
+            return False
+
+    @staticmethod
+    def close_cell(cell_id, user_id):
+        """Đóng cell qua MQTT command"""
+        cell = CellModel.query.get(cell_id)
+        if not cell:
+            return None
+            
+        # Kiểm tra nếu cell đã đóng rồi
+        current_status = cell.status.value if hasattr(cell.status, 'value') else cell.status
+        if current_status == "closed":
+            return None
+            
+        # Gửi MQTT command để đóng cell
+        success = mqtt_service.publish_command(cell_id, "close", {"user_id": user_id})
+        if success:
+            logger.info(f"MQTT close command sent to cell {cell_id} by user {user_id}")
+            return True
+        else:
+            logger.error(f"Failed to send MQTT close command to cell {cell_id}")
+            return False
 
     @staticmethod
     def delete_cell(cell_id):

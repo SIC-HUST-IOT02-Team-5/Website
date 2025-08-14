@@ -1,0 +1,23 @@
+{
+  "api": {
+    "base_url": "http://localhost:8000",
+    "timeout": 30,
+    "retry_attempts": 3
+  },
+  "rfid": {
+    "port": "COM3",
+    "baudrate": 9600,
+    "timeout": 1,
+    "demo_mode": true
+  },
+  "ui": {
+    "theme": "light",
+    "language": "vi",
+    "fullscreen": true,
+    "countdown_time": 300
+  },
+  "locker": {
+    "max_borrow_time": 3600,
+    "warning_time": 300
+  }
+} 

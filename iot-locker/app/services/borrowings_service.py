@@ -2,7 +2,9 @@ from app.extensions import db
 from app.models.borrowings_model import BorrowingModel, BorrowStatus
 from app.models.item_model import ItemModel, ItemStatus
 from app.models.user_model import UserModel
+from app.models.item_access_model import ItemAccessModel
 from datetime import datetime
+from app.utils.timezone_helper import get_vn_utc_now
 
 class BorrowingsService:
     @staticmethod
@@ -17,6 +19,13 @@ class BorrowingsService:
             return None, {"error": "Item not found"}
         if item.status != ItemStatus.available:
             return None, {"error": "Item not available"}
+        # Kiểm tra quyền truy cập item: nếu item có cấu hình access thì user phải thuộc danh sách
+        access_rows = ItemAccessModel.query.filter_by(item_id=item_id).all()
+        if access_rows:
+            allowed_user_ids = {row.user_id for row in access_rows}
+            if user_id not in allowed_user_ids:
+                return None, {"error": "User doesn't have access to this item"}
+
         # Tạo bản ghi borrowings
         borrowing = BorrowingModel(
             user_id=user_id,
@@ -38,21 +47,28 @@ class BorrowingsService:
         ).all()
 
     @staticmethod
+    def get_active_borrowings_for_user(user_id: int):
+        """Return active (not yet returned) borrowings for a specific user."""
+        return BorrowingModel.query.options(
+            db.joinedload(BorrowingModel.user),
+            db.joinedload(BorrowingModel.item)
+        ).filter(
+            BorrowingModel.user_id == user_id,
+            BorrowingModel.status == BorrowStatus.borrowing
+        ).all()
+
+    @staticmethod
     def return_item(borrowing_id):
         borrowing = BorrowingModel.query.get(borrowing_id)
         if not borrowing or borrowing.status != BorrowStatus.borrowing:
             return None, {"error": "Borrowing not found or already returned"}
-        borrowing.returned_at = datetime.utcnow()
+        borrowing.returned_at = get_vn_utc_now()
         borrowing.status = BorrowStatus.returned
         item = ItemModel.query.get(borrowing.item_id)
         if item:
             item.status = ItemStatus.available
         db.session.commit()
         return borrowing, None
-        
-    @staticmethod
-    def get_all_borrowings():
-        return BorrowingModel.query.all()
         
     @staticmethod
     def get_borrowing(borrowing_id):

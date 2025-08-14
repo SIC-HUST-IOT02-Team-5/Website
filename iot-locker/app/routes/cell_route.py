@@ -61,6 +61,36 @@ def delete_cell(cell_id):
         return {"message": "Cell not found"}, 404
     return {"message": "Cell deleted"}, 200
     
+@cell_bp.route('/cells/<int:cell_id>/open', methods=['POST'])
+@jwt_required()
+def open_cell(cell_id):
+    """API endpoint để mở cell qua MQTT"""
+    claims = get_jwt()
+    user_id = claims.get('sub')
+    
+    try:
+        result = CellService.open_cell(cell_id, user_id)
+        if not result:
+            return {"message": "Cell not found or already open"}, 404
+        return {"message": f"Cell {cell_id} opened successfully", "status": "open"}, 200
+    except Exception as e:
+        return {"message": str(e)}, 400
+
+@cell_bp.route('/cells/<int:cell_id>/close', methods=['POST'])
+@jwt_required()
+def close_cell(cell_id):
+    """API endpoint để đóng cell qua MQTT"""
+    claims = get_jwt()
+    user_id = claims.get('sub')
+    
+    try:
+        result = CellService.close_cell(cell_id, user_id)
+        if not result:
+            return {"message": "Cell not found or already closed"}, 404
+        return {"message": f"Cell {cell_id} closed successfully", "status": "closed"}, 200
+    except Exception as e:
+        return {"message": str(e)}, 400
+
 @cell_bp.route('/cells/<int:cell_id>/borrowings', methods=['GET'])
 @jwt_required()
 def get_cell_borrowings(cell_id):
@@ -69,50 +99,3 @@ def get_cell_borrowings(cell_id):
     
     borrowings = BorrowingsService.get_borrowings_by_cell(cell_id)
     return jsonify(BorrowingSchema(many=True).dump(borrowings)), 200
-
-# MQTT Control Endpoints
-@cell_bp.route('/cells/<int:cell_id>/open', methods=['POST'])
-@jwt_required()
-def open_cell(cell_id):
-    """Gửi lệnh mở cell qua MQTT"""
-    from app.services.mqtt_service import mqtt_service
-    
-    claims = get_jwt()
-    user_id = claims.get('sub')
-    role = claims.get('role', 'user')
-    
-    # Kiểm tra cell tồn tại
-    cell = CellService.get_cell_by_id(cell_id)
-    if not cell:
-        return {"message": "Cell not found"}, 404
-    
-    # Gửi lệnh mở qua MQTT
-    success = mqtt_service.publish_command(cell_id, "open", {"user_id": user_id})
-    
-    if success:
-        return {"message": f"Open command sent to cell {cell_id}"}, 200
-    else:
-        return {"message": "Failed to send command"}, 500
-
-@cell_bp.route('/cells/<int:cell_id>/close', methods=['POST'])
-@jwt_required()
-def close_cell(cell_id):
-    """Gửi lệnh đóng cell qua MQTT"""
-    from app.services.mqtt_service import mqtt_service
-    
-    claims = get_jwt()
-    user_id = claims.get('sub')
-    role = claims.get('role', 'user')
-    
-    # Kiểm tra cell tồn tại
-    cell = CellService.get_cell_by_id(cell_id)
-    if not cell:
-        return {"message": "Cell not found"}, 404
-    
-    # Gửi lệnh đóng qua MQTT
-    success = mqtt_service.publish_command(cell_id, "close", {"user_id": user_id})
-    
-    if success:
-        return {"message": f"Close command sent to cell {cell_id}"}, 200
-    else:
-        return {"message": "Failed to send command"}, 500
