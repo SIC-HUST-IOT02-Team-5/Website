@@ -16,7 +16,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
-    CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+    CORS(app, origins=['*'], supports_credentials=True)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=float(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES_HOURS', 1)))
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES_DAYS', 30)))
     
